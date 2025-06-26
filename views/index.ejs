@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipLiga v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="/js/theme.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200"
+      x-data="{
+          get darkMode() {
+              return localStorage.getItem('darkMode') === 'true';
+          },
+          toggleDarkMode() {
+              const newValue = !this.darkMode;
+              window.setTheme(newValue);
+          }
+      }">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">🏆 TipLiga</a>
+                    <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">v2.0</span>
+
+                    <!-- Navigation -->
+                    <nav class="flex items-center space-x-2">
+                        <a href="/leaderboard" class="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
+                            🏆 Leaderboard
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Dark Mode Toggle -->
+                    <button @click="toggleDarkMode()"
+                            class="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                            title="Toggle dark/light mode for entire app">
+                        <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                        <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </button>
+                    <% if (user) { %>
+                        <div class="flex items-center space-x-3">
+                            <% if (user.avatar_url) { %>
+                                <img src="<%= user.avatar_url %>" alt="Avatar" class="w-8 h-8 rounded-full">
+                            <% } %>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= user.username %></span>
+                            <% if (isAdmin) { %>
+                                <a href="/admin" class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors">
+                                    Admin Panel
+                                </a>
+                            <% } %>
+                            <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors">Logout</a>
+                        </div>
+                    <% } else { %>
+                        <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                            Login with Discord
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <% if (!user) { %>
+            <!-- Welcome Section -->
+            <div class="text-center py-12">
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Vítejte v TipLiga v2.0!</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Tipujte výsledky zápasů a soutěžte s přáteli</p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors">
+                        Začít tipovat
+                    </a>
+                    <a href="/leaderboard" class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-8 py-3 rounded-lg text-lg font-medium transition-colors">
+                        🏆 View Leaderboard
+                    </a>
+                </div>
+            </div>
+        <% } else { %>
+            <!-- Matches Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Nadcházející zápasy</h2>
+                
+                <% if (matches.length === 0) { %>
+                    <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <p class="text-gray-500 dark:text-gray-400">Momentálně nejsou k dispozici žádné zápasy.</p>
+                    </div>
+                <% } else { %>
+                    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <% matches.forEach(match => { %>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+                                 x-data="{
+                                     loading: false,
+                                     userPrediction: '<%= userPredictions[match.id] || "" %>',
+                                     totalPredictions: <%= match.total_predictions %>,
+                                     votesTeamA: <%= match.votes_team_a %>,
+                                     votesTeamB: <%= match.votes_team_b %>,
+                                     percentTeamA: <%= match.percent_team_a %>,
+                                     percentTeamB: <%= match.percent_team_b %>,
+
+                                     async makePrediction(winner) {
+                                         this.loading = true;
+                                         try {
+                                             const response = await fetch('/predict', {
+                                                 method: 'POST',
+                                                 headers: { 'Content-Type': 'application/json' },
+                                                 body: JSON.stringify({
+                                                     matchId: <%= match.id %>,
+                                                     winner: winner
+                                                 })
+                                             });
+
+                                             const result = await response.json();
+                                             if (result.success) {
+                                                 this.userPrediction = winner;
+                                                 await this.updateVoteStats();
+                                                 this.$dispatch('show-success', 'Tip byl úspěšně uložen! 🎯');
+                                             } else {
+                                                 this.$dispatch('show-error', 'Chyba: ' + result.error);
+                                             }
+                                         } catch (error) {
+                                             this.$dispatch('show-error', 'Chyba při ukládání tipu');
+                                         } finally {
+                                             this.loading = false;
+                                         }
+                                     },
+
+                                     async updateVoteStats() {
+                                         try {
+                                             const response = await fetch('/api/match/<%= match.id %>/stats');
+                                             const stats = await response.json();
+
+                                             if (stats.success) {
+                                                 this.totalPredictions = stats.total_predictions;
+                                                 this.votesTeamA = stats.votes_team_a;
+                                                 this.votesTeamB = stats.votes_team_b;
+                                                 this.percentTeamA = stats.percent_team_a;
+                                                 this.percentTeamB = stats.percent_team_b;
+                                             }
+                                         } catch (error) {
+                                             console.log('Could not update vote stats');
+                                         }
+                                     }
+                                 }">
+                                <!-- Match Info -->
+                                <div class="text-center mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                        <%= match.team_a %> vs <%= match.team_b %>
+                                    </h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        <%= new Date(match.match_time).toLocaleString('cs-CZ') %>
+                                    </p>
+                                </div>
+
+                                <!-- Betting Buttons -->
+                                <% if (match.is_locked) { %>
+                                    <div class="text-center">
+                                        <p class="text-red-600 font-medium mb-2">Tipování uzavřeno</p>
+                                        <% if (userPredictions[match.id]) { %>
+                                            <p class="text-sm text-gray-600">
+                                                Váš tip: <span class="font-medium"><%= userPredictions[match.id] %></span>
+                                            </p>
+                                        <% } %>
+                                    </div>
+                                <% } else { %>
+                                    <div class="flex space-x-2 mb-4">
+                                        <button 
+                                            @click="makePrediction('<%= match.team_a %>')"
+                                            :disabled="loading"
+                                            :class="userPrediction === '<%= match.team_a %>' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'"
+                                            class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
+                                            <%= match.team_a %>
+                                        </button>
+                                        <button 
+                                            @click="makePrediction('<%= match.team_b %>')"
+                                            :disabled="loading"
+                                            :class="userPrediction === '<%= match.team_b %>' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-red-50'"
+                                            class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
+                                            <%= match.team_b %>
+                                        </button>
+                                    </div>
+                                <% } %>
+
+                                <!-- Voting Stats -->
+                                <div x-show="totalPredictions > 0" class="space-y-2">
+                                    <div class="flex justify-between text-xs text-gray-600">
+                                        <span><%= match.team_a %></span>
+                                        <span x-text="percentTeamA + '%'"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                                             :style="'width: ' + percentTeamA + '%'"></div>
+                                    </div>
+
+                                    <div class="flex justify-between text-xs text-gray-600">
+                                        <span><%= match.team_b %></span>
+                                        <span x-text="percentTeamB + '%'"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-red-500 h-2 rounded-full transition-all duration-500"
+                                             :style="'width: ' + percentTeamB + '%'"></div>
+                                    </div>
+
+                                    <p class="text-xs text-gray-500 text-center mt-2">
+                                        Celkem tipů: <span x-text="totalPredictions"></span>
+                                    </p>
+                                </div>
+
+                                <div x-show="totalPredictions === 0" class="text-xs text-gray-500 text-center">
+                                    Zatím žádné tipy
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+                TipLiga v2.0 - Moderní tipovací aplikace
+            </p>
+        </div>
+    </footer>
+
+    <!-- Notification System -->
+    <div x-data="{
+        showNotification: false,
+        notificationMessage: '',
+        notificationType: 'success',
+
+        showSuccess(message) {
+            this.notificationMessage = message;
+            this.notificationType = 'success';
+            this.showNotification = true;
+            setTimeout(() => this.showNotification = false, 3000);
+        },
+
+        showError(message) {
+            this.notificationMessage = message;
+            this.notificationType = 'error';
+            this.showNotification = true;
+            setTimeout(() => this.showNotification = false, 5000);
+        }
+    }"
+    @show-success.window="showSuccess($event.detail)"
+    @show-error.window="showError($event.detail)">
+
+        <!-- Notification Toast -->
+        <div x-show="showNotification"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+             x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed top-4 right-4 z-50">
+
+            <div :class="notificationType === 'success' ? 'bg-green-500' : 'bg-red-500'"
+                 class="max-w-sm w-full shadow-lg rounded-lg pointer-events-auto">
+                <div class="p-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg x-show="notificationType === 'success'" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <svg x-show="notificationType === 'error'" class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3 w-0 flex-1">
+                            <p class="text-sm font-medium text-white" x-text="notificationMessage"></p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0 flex">
+                            <button @click="showNotification = false" class="inline-flex text-white hover:text-gray-200 focus:outline-none">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

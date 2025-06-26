@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - TipLiga v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+
+
+    </script>
+    <script src="/js/theme.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">🏆 TipLiga</a>
+                    <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">v2.0</span>
+
+                    <!-- Navigation -->
+                    <nav class="flex items-center space-x-2">
+                        <a href="/leaderboard" class="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
+                            🏆 Leaderboard
+                        </a>
+                    </nav>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <% if (user.avatar_url) { %>
+                            <img src="<%= user.avatar_url %>" alt="Avatar" class="w-8 h-8 rounded-full">
+                        <% } %>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= user.username %></span>
+                        <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400"><%= stats.total_predictions %></div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">Celkem tipů</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="text-2xl font-bold text-green-600 dark:text-green-400"><%= stats.total_users %></div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">Aktivních uživatelů</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="text-2xl font-bold text-purple-600 dark:text-purple-400"><%= stats.total_matches %></div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">Celkem zápasů</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= stats.accuracy %>%</div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">Úspěšnost tipů</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <% if (isAdmin) { %>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">👥 User Management</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">Manage user roles, reset statistics, and handle user accounts</p>
+                <a href="/admin/users" class="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    Manage Users
+                </a>
+            </div>
+        <% } %>
+
+        <!-- Add New Match -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-8" x-data="{ showForm: false }">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">🎮 Match Management</h2>
+                    <button @click="showForm = !showForm"
+                            class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                        <span x-text="showForm ? 'Zrušit' : 'Add Match'"></span>
+                    </button>
+                </div>
+                
+                <div x-show="showForm" x-transition class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <form action="/admin/matches" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4" onsubmit="return validateMatchTime(this)">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team A</label>
+                            <input type="text" name="teamA" required placeholder="e.g. Team Liquid"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team B</label>
+                            <input type="text" name="teamB" required placeholder="e.g. FaZe Clan"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Match Time</label>
+                            <input type="datetime-local" name="matchTime" required
+                                   min="" id="matchTimeInput"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit"
+                                    class="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                Create Match
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matches Management -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">All Matches</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Match</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Predictions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Result</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <% matches.forEach(match => { %>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            <%= match.team_a %> vs <%= match.team_b %>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        <%= new Date(match.match_time).toLocaleString('cs-CZ') %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                   <%= match.status === 'upcoming' ? 'bg-yellow-100 text-yellow-800' : 
+                                                       match.status === 'finished' ? 'bg-green-100 text-green-800' : 
+                                                       'bg-gray-100 text-gray-800' %>">
+                                            <%= match.status %>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        <%= match.total_predictions %> predictions
+                                        <% if (match.total_predictions > 0) { %>
+                                            <br>
+                                            <span class="text-xs">
+                                                <%= match.team_a %>: <%= match.percent_team_a %>% |
+                                                <%= match.team_b %>: <%= match.percent_team_b %>%
+                                            </span>
+                                        <% } %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        <% if (match.winner) { %>
+                                            <span class="font-medium text-green-600 dark:text-green-400"><%= match.winner %></span>
+                                        <% } else { %>
+                                            <span class="text-gray-400 dark:text-gray-500">Not set</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex space-x-2">
+                                            <!-- Edit Button -->
+                                            <button onclick="openEditModal(<%= match.id %>, '<%= match.team_a %>', '<%= match.team_b %>', '<%= new Date(match.match_time).toISOString().slice(0, 16) %>')"
+                                                    class="text-blue-600 hover:text-blue-900 text-xs">
+                                                ✏️ Edit
+                                            </button>
+
+                                            <!-- Delete Button (Admin only) -->
+                                            <% if (isAdmin) { %>
+                                                <button onclick="openDeleteModal(<%= match.id %>, '<%= match.team_a %>', '<%= match.team_b %>')"
+                                                        class="text-red-600 hover:text-red-900 text-xs">
+                                                    🗑️ Delete
+                                                </button>
+                                            <% } %>
+
+                                            <!-- Set Result Buttons -->
+                                            <% if (!match.winner && match.status === 'upcoming') { %>
+                                                <div class="border-l pl-2 ml-2 flex space-x-1">
+                                                    <form action="/admin/matches/<%= match.id %>/result" method="POST" class="inline">
+                                                        <input type="hidden" name="winner" value="<%= match.team_a %>">
+                                                        <button type="submit" class="text-blue-600 hover:text-blue-900 text-xs">
+                                                            🏆 <%= match.team_a %>
+                                                        </button>
+                                                    </form>
+                                                    <form action="/admin/matches/<%= match.id %>/result" method="POST" class="inline">
+                                                        <input type="hidden" name="winner" value="<%= match.team_b %>">
+                                                        <button type="submit" class="text-red-600 hover:text-red-900 text-xs">
+                                                            🏆 <%= match.team_b %>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Žebříček uživatelů</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Uživatel</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Celkem tipů</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Správných</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Body</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Úspěšnost</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <% leaderboard.forEach((user, index) => { %>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white mr-2">
+                                                #<%= index + 1 %>
+                                            </div>
+                                            <% if (user.avatar_url) { %>
+                                                <img src="<%= user.avatar_url %>" alt="Avatar" class="w-6 h-6 rounded-full mr-2">
+                                            <% } %>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                <%= user.username %>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        <%= user.total_predictions %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        <%= user.correct_predictions %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                        <%= user.total_points %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        <%= user.total_predictions > 0 ? Math.round((user.correct_predictions / user.total_predictions) * 100) : 0 %>%
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success/Error Messages -->
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <%= success %>
+        </div>
+    <% } %>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <!-- Edit Match Modal -->
+    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Upravit zápas</h3>
+                        <button onclick="closeEditModal()" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form id="editForm" method="POST" onsubmit="return validateEditMatchTime(this)">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tým A</label>
+                                <input type="text" id="editTeamA" name="teamA" required
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tým B</label>
+                                <input type="text" id="editTeamB" name="teamB" required
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Match Time</label>
+                                <input type="datetime-local" id="editMatchTime" name="matchTime" required
+                                       min=""
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" onclick="closeEditModal()"
+                                    class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                                Zrušit
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors">
+                                Uložit změny
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
+                        <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Smazat zápas</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">
+                        Opravdu chcete smazat zápas<br>
+                        <strong id="deleteMatchName"></strong>?<br>
+                        <span class="text-red-600 dark:text-red-400">Tato akce je nevratná!</span>
+                    </p>
+
+                    <div class="flex justify-center space-x-3">
+                        <button onclick="closeDeleteModal()"
+                                class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                            Zrušit
+                        </button>
+                        <form id="deleteForm" method="POST" class="inline">
+                            <button type="submit"
+                                    class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors">
+                                Smazat zápas
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set minimum date to current time for both forms
+        function setMinimumDates() {
+            const now = new Date();
+            // Add 5 minutes to current time to give some buffer
+            now.setMinutes(now.getMinutes() + 5);
+            const minDateTime = now.toISOString().slice(0, 16);
+
+            const createInput = document.getElementById('matchTimeInput');
+            const editInput = document.getElementById('editMatchTime');
+
+            if (createInput) createInput.min = minDateTime;
+            if (editInput) editInput.min = minDateTime;
+        }
+
+        // Set minimum dates on page load
+        document.addEventListener('DOMContentLoaded', setMinimumDates);
+
+        // Validate match time for create form
+        function validateMatchTime(form) {
+            const matchTimeInput = form.querySelector('input[name="matchTime"]');
+            const matchTime = new Date(matchTimeInput.value);
+            const now = new Date();
+
+            if (matchTime <= now) {
+                alert('Match time must be in the future!');
+                return false;
+            }
+            return true;
+        }
+
+        // Validate match time for edit form
+        function validateEditMatchTime(form) {
+            const matchTimeInput = form.querySelector('#editMatchTime');
+            const matchTime = new Date(matchTimeInput.value);
+            const now = new Date();
+
+            if (matchTime <= now) {
+                alert('Match time must be in the future!');
+                return false;
+            }
+            return true;
+        }
+
+        // Auto-hide messages after 3 seconds
+        setTimeout(() => {
+            const messages = document.querySelectorAll('.fixed.top-4.right-4');
+            messages.forEach(msg => {
+                msg.style.transition = 'opacity 0.3s';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
+            });
+        }, 3000);
+
+        // Edit Modal Functions
+        function openEditModal(id, teamA, teamB, matchTime) {
+            document.getElementById('editForm').action = `/admin/matches/${id}/edit`;
+            document.getElementById('editTeamA').value = teamA;
+            document.getElementById('editTeamB').value = teamB;
+            document.getElementById('editMatchTime').value = matchTime;
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        // Delete Modal Functions
+        function openDeleteModal(id, teamA, teamB) {
+            document.getElementById('deleteForm').action = `/admin/matches/${id}/delete`;
+            document.getElementById('deleteMatchName').textContent = `${teamA} vs ${teamB}`;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEditModal();
+        });
+
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+
+        // Close modals with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditModal();
+                closeDeleteModal();
+            }
+        });
+
+        // Theme is handled by /js/theme.js
+    </script>
+</body>
+</html>

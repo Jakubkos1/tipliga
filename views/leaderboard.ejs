@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - TipLiga v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+
+
+    </script>
+    <script src="/js/theme.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">🏆 TipLiga</a>
+                    <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">v2.0</span>
+
+
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <% if (user) { %>
+                        <div class="flex items-center space-x-3">
+                            <% if (user.avatar_url) { %>
+                                <img src="<%= user.avatar_url %>" alt="Avatar" class="w-8 h-8 rounded-full">
+                            <% } %>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= user.username %></span>
+
+                            <% if (isAdmin) { %>
+                                <a href="/admin" class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors">
+                                    Admin Panel
+                                </a>
+                            <% } %>
+                            <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors">Logout</a>
+                        </div>
+                    <% } else { %>
+                        <div class="flex items-center space-x-3">
+                            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                Login with Discord
+                            </a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Title -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🏆 Leaderboard</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300">Top players in the TipLiga community</p>
+        </div>
+
+
+
+        <!-- Leaderboard -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Top Players</h2>
+                
+                <% if (leaderboard.length === 0) { %>
+                    <div class="text-center py-12">
+                        <div class="text-6xl mb-4">🤔</div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No players yet</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6">Be the first to start predicting!</p>
+                        <% if (!user) { %>
+                            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-6 py-2 rounded-md text-sm font-medium transition-colors">
+                                Login and start predicting
+                            </a>
+                        <% } else { %>
+                            <a href="/" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-6 py-2 rounded-md text-sm font-medium transition-colors">
+                                Start predicting
+                            </a>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Position</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Player</th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">Points</th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">Predictions</th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">Success Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <% leaderboard.forEach((tipér, index) => { %>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 <%= user && user.username === tipér.username ? 'bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500' : '' %>">
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <% if (index === 0) { %>
+                                                    <span class="text-2xl mr-2">🥇</span>
+                                                <% } else if (index === 1) { %>
+                                                    <span class="text-2xl mr-2">🥈</span>
+                                                <% } else if (index === 2) { %>
+                                                    <span class="text-2xl mr-2">🥉</span>
+                                                <% } else { %>
+                                                    <span class="text-lg font-medium text-gray-500 dark:text-gray-400 mr-3">#<%= index + 1 %></span>
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                <% if (tipér.avatar_url) { %>
+                                                    <img src="<%= tipér.avatar_url %>" alt="Avatar" class="w-10 h-10 rounded-full mr-3">
+                                                <% } else { %>
+                                                    <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center">
+                                                        <span class="text-gray-600 font-medium"><%= tipér.username.charAt(0).toUpperCase() %></span>
+                                                    </div>
+                                                <% } %>
+                                                <div>
+                                                    <div class="font-medium text-gray-900 dark:text-white">
+                                                        <%= tipér.username %>
+                                                        <% if (user && user.username === tipér.username) { %>
+                                                            <span class="ml-2 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">To jste vy!</span>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 text-center">
+                                            <span class="text-2xl font-bold text-blue-600 dark:text-blue-400"><%= tipér.total_points || 0 %></span>
+                                        </td>
+                                        <td class="py-4 px-4 text-center">
+                                            <span class="text-gray-600 dark:text-gray-300"><%= tipér.total_predictions %></span>
+                                        </td>
+                                        <td class="py-4 px-4 text-center">
+                                            <%
+                                                const accuracy = tipér.total_predictions > 0 ? Math.round((tipér.correct_predictions / tipér.total_predictions) * 100) : 0;
+                                                let accuracyColor = 'text-gray-600';
+                                                if (accuracy >= 70) accuracyColor = 'text-green-600';
+                                                else if (accuracy >= 50) accuracyColor = 'text-yellow-600';
+                                                else if (accuracy > 0) accuracyColor = 'text-red-600';
+                                            %>
+                                            <span class="font-medium <%= accuracyColor %>"><%= accuracy %>%</span>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <% if (!user) { %>
+            <div class="mt-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Chcete se připojit k soutěži?</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6">Přihlaste se a začněte tipovat výsledky zápasů!</p>
+                <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors">
+                    Přihlásit se přes Discord
+                </a>
+            </div>
+        <% } %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+                TipLiga v2.0 - Soutěžte s přáteli v tipování!
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Theme is handled by /js/theme.js
+    </script>
+</body>
+</html>

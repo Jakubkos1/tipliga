@@ -1,0 +1,111 @@
+const db = require('../database/db');
+
+class Prediction {
+    static async create(predictionData) {
+        try {
+            const { userId, matchId, predictedWinner } = predictionData;
+            
+            // Use INSERT OR REPLACE to handle updates
+            const result = await db.run(`
+                INSERT OR REPLACE INTO predictions (user_id, match_id, predicted_winner, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            `, [userId, matchId, predictedWinner]);
+            
+            return await this.findById(result.id);
+        } catch (error) {
+            console.error('Error creating/updating prediction:', error);
+            throw error;
+        }
+    }
+
+    static async findById(id) {
+        try {
+            const prediction = await db.get('SELECT * FROM predictions WHERE id = ?', [id]);
+            return prediction;
+        } catch (error) {
+            console.error('Error finding prediction by ID:', error);
+            throw error;
+        }
+    }
+
+    static async findByUserAndMatch(userId, matchId) {
+        try {
+            const prediction = await db.get(
+                'SELECT * FROM predictions WHERE user_id = ? AND match_id = ?',
+                [userId, matchId]
+            );
+            return prediction;
+        } catch (error) {
+            console.error('Error finding prediction by user and match:', error);
+            throw error;
+        }
+    }
+
+    static async getUserPredictions(userId) {
+        try {
+            const predictions = await db.all(`
+                SELECT 
+                    p.*,
+                    m.team_a,
+                    m.team_b,
+                    m.match_time,
+                    m.winner,
+                    m.status
+                FROM predictions p
+                JOIN matches m ON p.match_id = m.id
+                WHERE p.user_id = ?
+                ORDER BY m.match_time DESC
+            `, [userId]);
+            
+            return predictions;
+        } catch (error) {
+            console.error('Error getting user predictions:', error);
+            throw error;
+        }
+    }
+
+    static async getMatchPredictions(matchId) {
+        try {
+            const predictions = await db.all(`
+                SELECT 
+                    p.*,
+                    u.username,
+                    u.avatar_url
+                FROM predictions p
+                JOIN users u ON p.user_id = u.id
+                WHERE p.match_id = ?
+                ORDER BY p.created_at ASC
+            `, [matchId]);
+            
+            return predictions;
+        } catch (error) {
+            console.error('Error getting match predictions:', error);
+            throw error;
+        }
+    }
+
+    static async getStats() {
+        try {
+            const stats = await db.get(`
+                SELECT 
+                    COUNT(*) as total_predictions,
+                    COUNT(DISTINCT user_id) as total_users,
+                    COUNT(DISTINCT match_id) as total_matches,
+                    COUNT(CASE WHEN points_earned > 0 THEN 1 END) as correct_predictions
+                FROM predictions
+            `);
+            
+            return {
+                ...stats,
+                accuracy: stats.total_predictions > 0 
+                    ? Math.round((stats.correct_predictions / stats.total_predictions) * 100) 
+                    : 0
+            };
+        } catch (error) {
+            console.error('Error getting prediction stats:', error);
+            throw error;
+        }
+    }
+}
+
+module.exports = Prediction;
