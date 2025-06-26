@@ -6,9 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "setup": "node scripts/setup-db.js",
-    "build": "echo 'No build step required'",
-    "vercel-build": "npm run setup"
+    "build": "echo 'No build step required'"
   },
   "keywords": ["betting", "discord", "sports"],
   "author": "",
