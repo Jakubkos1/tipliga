@@ -61,10 +61,22 @@ Update your Discord app's redirect URL to match your Vercel domain.
 
 ## 📝 Notes
 
-- Database is SQLite (file-based) - perfect for small apps
-- App sleeps on free hosting after inactivity
-- First request after sleep takes ~30 seconds to wake up
-- Railway gives you $5/month credit (usually enough)
+- **Database**: Uses in-memory SQLite on Vercel (data resets on deployment)
+- **Local Development**: Uses file-based SQLite (data persists)
+- **App sleeps** on free hosting after inactivity
+- **First request** after sleep takes ~30 seconds to wake up
+- **Vercel** provides generous free tier for personal projects
+
+## ⚠️ Important: In-Memory Database
+
+On Vercel, the app uses an in-memory database, which means:
+- **Data resets** when the app restarts or redeploys
+- **Perfect for testing** and demonstrations
+- **For production**, consider using a hosted database like:
+  - Vercel Postgres
+  - PlanetScale
+  - Supabase
+  - Railway PostgreSQL
 
 ## 🎮 Admin Setup
 

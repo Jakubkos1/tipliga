@@ -9,14 +9,13 @@ class Database {
     }
 
     init() {
-        // Create database directory if it doesn't exist
-        const dbDir = path.join(__dirname);
-        if (!fs.existsSync(dbDir)) {
-            fs.mkdirSync(dbDir, { recursive: true });
-        }
+        // Use in-memory database for Vercel (read-only filesystem)
+        // or file database for local development
+        const isProduction = process.env.NODE_ENV === 'production';
+        const dbPath = isProduction ? ':memory:' : path.join(__dirname, 'tipliga.db');
 
-        // Connect to SQLite database
-        const dbPath = path.join(__dirname, 'tipliga.db');
+        console.log(`🗄️ Using ${isProduction ? 'in-memory' : 'file'} database`);
+
         this.db = new sqlite3.Database(dbPath, (err) => {
             if (err) {
                 console.error('❌ Error opening database:', err.message);

@@ -15,6 +15,9 @@ const db = require('./database/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Vercel
+app.set('trust proxy', 1);
+
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -71,6 +74,12 @@ passport.use(new DiscordStrategy({
         return done(null, user);
     } catch (error) {
         console.error('❌ Discord OAuth error:', error);
+        console.error('❌ Error stack:', error.stack);
+        console.error('❌ Error details:', {
+            message: error.message,
+            code: error.code,
+            errno: error.errno
+        });
         return done(error, null);
     }
 }));
@@ -175,8 +184,14 @@ app.get('/auth/discord/callback',
         failureMessage: true
     }),
     (req, res) => {
-        console.log('✅ Discord OAuth successful for user:', req.user.username);
-        res.redirect('/?success=logged_in');
+        try {
+            console.log('✅ Discord OAuth successful for user:', req.user ? req.user.username : 'undefined user');
+            console.log('🔍 User object:', req.user);
+            res.redirect('/?success=logged_in');
+        } catch (error) {
+            console.error('❌ Error in Discord callback:', error);
+            res.redirect('/?error=callback_failed');
+        }
     }
 );
 
