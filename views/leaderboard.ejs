@@ -34,7 +34,7 @@
                             <% } %>
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= user.username %></span>
 
-                            <% if (isAdmin) { %>
+                            <% if (isAdmin || (user && user.role === 'moderator')) { %>
                                 <a href="/admin" class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors">
                                     Admin Panel
                                 </a>

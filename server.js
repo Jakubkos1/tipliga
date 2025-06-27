@@ -18,14 +18,18 @@ const PORT = process.env.PORT || 3000;
 // Trust proxy for Vercel
 app.set('trust proxy', 1);
 
-// Rate limiting
+// Rate limiting - More generous for normal browsing
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    max: 1000, // limit each IP to 1000 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // Middleware
-app.use(limiter);
+// Temporarily disable rate limiting for debugging
+// app.use(limiter);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -159,7 +163,8 @@ app.get('/', async (req, res) => {
             user: req.user,
             matches,
             userPredictions,
-            isAdmin: checkIsAdmin(req.user)
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user)
         });
     } catch (error) {
         console.error('Error loading homepage:', error);
@@ -286,7 +291,8 @@ app.get('/leaderboard', async (req, res) => {
             user: req.user,
             leaderboard,
             stats,
-            isAdmin: checkIsAdmin(req.user)
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user)
         });
     } catch (error) {
         console.error('Error loading leaderboard:', error);
