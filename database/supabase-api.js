@@ -147,20 +147,57 @@ class SupabaseAPI {
         return result[0];
     }
 
-    // Match methods
+    // Match methods - simplified to match working API call
     async getAllMatches() {
-        return await this.apiQuery('matches', {
-            select: '*',
-            order: 'match_time.asc'
-        });
+        try {
+            const url = `${this.baseUrl}/rest/v1/matches?apikey=${this.apiKey}`;
+            console.log('🔍 Direct API call to:', url);
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'apikey': this.apiKey,
+                    'Authorization': `Bearer ${this.apiKey}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Got matches:', data.length);
+            return data;
+        } catch (error) {
+            console.error('❌ getAllMatches error:', error);
+            throw error;
+        }
     }
 
     async getUpcomingMatches() {
-        return await this.apiQuery('matches', {
-            select: '*',
-            filter: 'status=eq.upcoming',
-            order: 'match_time.asc'
-        });
+        try {
+            const url = `${this.baseUrl}/rest/v1/matches?status=eq.upcoming&apikey=${this.apiKey}`;
+            console.log('🔍 Direct API call to:', url);
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'apikey': this.apiKey,
+                    'Authorization': `Bearer ${this.apiKey}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Got upcoming matches:', data.length);
+            return data;
+        } catch (error) {
+            console.error('❌ getUpcomingMatches error:', error);
+            throw error;
+        }
     }
 
     async createMatch(matchData) {
