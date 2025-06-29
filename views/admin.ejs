@@ -246,13 +246,7 @@
                                                     statusCell.innerHTML = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">finished</span>`;
                                                 }
 
-                                                // Remove set result buttons
-                                                if (actionsCell) {
-                                                    const resultButtons = actionsCell.querySelector('.border-l');
-                                                    if (resultButtons) {
-                                                        resultButtons.remove();
-                                                    }
-                                                }
+                                                // Don't remove buttons - they will be handled by Alpine.js state
                                             } else {
                                                 this.$dispatch('show-error', 'Chyba: ' + result.error);
                                             }
@@ -282,6 +276,34 @@
                                                 setTimeout(() => {
                                                     window.location.reload();
                                                 }, 1500);
+                                            } else {
+                                                this.$dispatch('show-error', 'Error resetting match result');
+                                            }
+                                        } catch (error) {
+                                            this.$dispatch('show-error', 'Error resetting match result');
+                                        } finally {
+                                            this.loading = false;
+                                        }
+                                    },
+
+                                    async resetResultLocal(matchId) {
+                                        // Local reset - just calls the server to reset and updates UI immediately
+                                        this.loading = true;
+                                        try {
+                                            const response = await fetch(`/admin/matches/${matchId}/reset`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' }
+                                            });
+
+                                            if (response.ok) {
+                                                // Update the result display immediately
+                                                const matchRow = this.$el.closest('tr');
+                                                const resultCell = matchRow.querySelector('[data-field="result"]');
+                                                if (resultCell) {
+                                                    resultCell.innerHTML = `<span class="text-gray-400">Not set</span>`;
+                                                }
+
+                                                this.$dispatch('show-success', 'Result reset! Select a new winner.');
                                             } else {
                                                 this.$dispatch('show-error', 'Error resetting match result');
                                             }
@@ -424,24 +446,27 @@
                                                 const canEvaluate = !match.winner && match.status !== 'finished' && now >= matchDate;
                                                 const isLocked = match.status !== 'upcoming' || (matchDate - now) <= (60 * 60 * 1000);
                                             %>
-                                            <% if (canEvaluate) { %>
-                                                <div class="border-l pl-2 ml-2 flex space-x-1">
-                                                    <button @click="setResult('<%= match.team_a %>')" :disabled="loading"
-                                                            class="text-blue-600 hover:text-blue-900 disabled:opacity-50 text-xs">
-                                                        🏆 <%= match.team_a %>
-                                                    </button>
-                                                    <button @click="setResult('<%= match.team_b %>')" :disabled="loading"
-                                                            class="text-red-600 hover:text-red-900 disabled:opacity-50 text-xs">
-                                                        🏆 <%= match.team_b %>
-                                                    </button>
-                                                </div>
-                                            <% } else if (match.winner) { %>
-                                                <!-- Reset Result Button for finished matches -->
-                                                <div class="border-l pl-2 ml-2">
-                                                    <button @click="resetResult(<%= match.id %>, '<%= match.team_a %>', '<%= match.team_b %>')" :disabled="loading"
-                                                            class="text-orange-600 hover:text-orange-900 disabled:opacity-50 text-xs">
-                                                        🔄 Reset Result
-                                                    </button>
+                                            <% if (canEvaluate || match.winner) { %>
+                                                <div class="border-l pl-2 ml-2" x-data="{ showTeamButtons: <%= !match.winner ? 'true' : 'false' %> }">
+                                                    <!-- Team Selection Buttons (shown initially or after reset) -->
+                                                    <div x-show="showTeamButtons" class="flex space-x-1">
+                                                        <button @click="setResult('<%= match.team_a %>'); showTeamButtons = false" :disabled="loading"
+                                                                class="text-blue-600 hover:text-blue-900 disabled:opacity-50 text-xs">
+                                                            🏆 <%= match.team_a %>
+                                                        </button>
+                                                        <button @click="setResult('<%= match.team_b %>'); showTeamButtons = false" :disabled="loading"
+                                                                class="text-red-600 hover:text-red-900 disabled:opacity-50 text-xs">
+                                                            🏆 <%= match.team_b %>
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Reset Button (shown after setting result) -->
+                                                    <div x-show="!showTeamButtons">
+                                                        <button @click="resetResultLocal(<%= match.id %>); showTeamButtons = true" :disabled="loading"
+                                                                class="text-orange-600 hover:text-orange-900 disabled:opacity-50 text-xs">
+                                                            🔄 Reset Result
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             <% } else if (!match.winner && now < matchDate) { %>
                                                 <div class="border-l pl-2 ml-2">
