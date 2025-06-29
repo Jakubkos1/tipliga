@@ -7,9 +7,10 @@ class PostgresDatabase {
     }
 
     init() {
-        // Use DATABASE_URL from Supabase
+        // Use DATABASE_URL or POSTGRES_URL from Supabase
+        const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
         this.pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
+            connectionString: connectionString,
             ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
         });
 

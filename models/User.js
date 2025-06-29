@@ -19,7 +19,7 @@ class User {
             const { discordId, username, avatarUrl } = userData;
 
             // Use PostgreSQL RETURNING clause or SQLite lastID
-            const isPostgres = !!process.env.DATABASE_URL;
+            const isPostgres = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
 
             if (isPostgres) {
                 const result = await db.query(

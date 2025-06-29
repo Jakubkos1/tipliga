@@ -2,8 +2,8 @@ const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
 
-// Use PostgreSQL if DATABASE_URL is set (regardless of NODE_ENV)
-const usePostgres = !!process.env.DATABASE_URL;
+// Use PostgreSQL if DATABASE_URL or POSTGRES_URL is set
+const usePostgres = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
 
 if (usePostgres) {
     console.log('🐘 Using PostgreSQL database (Supabase)');
