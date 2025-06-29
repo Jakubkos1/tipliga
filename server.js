@@ -601,22 +601,27 @@ app.post('/admin/matches/:id/delete', isAdmin, async (req, res) => {
 
         console.log(`🔍 Found match to delete: ${match.team_a} vs ${match.team_b}`);
 
-        // Use direct Supabase API DELETE call
-        console.log(`🔄 Using direct Supabase API DELETE for match ${id}...`);
+        // Use soft delete - mark as deleted but keep in database
+        console.log(`🔄 Using soft delete (marking as deleted) for match ${id}...`);
         try {
-            const directResult = await db.apiQuery('matches', {
-                method: 'DELETE',
-                filter: `id=eq.${id}`
+            const softDeleteResult = await db.apiQuery('matches', {
+                method: 'PATCH',
+                filter: `id=eq.${id}`,
+                body: {
+                    deleted: true,
+                    deleted_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }
             });
-            console.log(`✅ Direct delete result:`, directResult);
-            console.log(`✅ Admin ${req.user.username} deleted match: ${match.team_a} vs ${match.team_b} (ID: ${id})`);
-        } catch (directError) {
-            console.error(`❌ Direct delete failed:`, directError);
-            throw directError;
+            console.log(`✅ Soft delete result:`, softDeleteResult);
+            console.log(`✅ Admin ${req.user.username} soft deleted match: ${match.team_a} vs ${match.team_b} (ID: ${id}) - kept in database for backup`);
+        } catch (softDeleteError) {
+            console.error(`❌ Soft delete failed:`, softDeleteError);
+            throw softDeleteError;
         }
 
         // Redirect back to admin panel with success message
-        res.redirect('/admin?success=Match deleted successfully!');
+        res.redirect('/admin?success=Match deleted successfully (kept in database for backup)!');
     } catch (error) {
         console.error('❌ Error deleting match:', error);
         res.redirect('/admin?error=Error deleting match');
