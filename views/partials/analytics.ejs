@@ -1,0 +1,21 @@
+<!-- Vercel Analytics -->
+<script>
+    // Vercel Analytics - Vanilla JS version
+    (function() {
+        if (typeof window !== 'undefined') {
+            // Load Vercel Analytics
+            const script = document.createElement('script');
+            script.src = 'https://va.vercel-scripts.com/v1/script.js';
+            script.defer = true;
+            script.setAttribute('data-website-id', 'auto');
+            document.head.appendChild(script);
+            
+            // Initialize analytics
+            window.va = window.va || function() {
+                (window.vaq = window.vaq || []).push(arguments);
+            };
+            
+            console.log('📊 Vercel Analytics loaded');
+        }
+    })();
+</script>
