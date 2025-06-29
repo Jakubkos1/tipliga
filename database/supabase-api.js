@@ -54,13 +54,32 @@ class SupabaseAPI {
                 fetchOptions.body = JSON.stringify(options.body);
             }
 
+            // Debug logging
+            console.log('🔍 Supabase API Request:', {
+                url,
+                method,
+                table,
+                baseUrl: this.baseUrl,
+                hasApiKey: !!this.apiKey
+            });
+
             const response = await fetch(url, fetchOptions);
-            
+
+            console.log('📡 Supabase API Response:', {
+                status: response.status,
+                statusText: response.statusText,
+                url: response.url
+            });
+
             if (!response.ok) {
-                throw new Error(`Supabase API error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error('❌ Supabase API Error Details:', errorText);
+                throw new Error(`Supabase API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
 
-            return await response.json();
+            const data = await response.json();
+            console.log('✅ Supabase API Success:', { table, rowCount: data?.length || 'unknown' });
+            return data;
         } catch (error) {
             console.error('Supabase API query error:', error);
             throw error;
