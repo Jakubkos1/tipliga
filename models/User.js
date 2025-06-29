@@ -183,18 +183,46 @@ class User {
     // User management methods
     static async getAllUsers() {
         try {
-            const users = await db.all(`
-                SELECT
-                    u.*,
-                    COUNT(p.id) as total_predictions,
-                    SUM(CASE WHEN p.points_earned > 0 THEN 1 ELSE 0 END) as correct_predictions,
-                    SUM(p.points_earned) as total_points
-                FROM users u
-                LEFT JOIN predictions p ON u.id = p.user_id
-                GROUP BY u.id
-                ORDER BY u.created_at DESC
-            `);
-            return users;
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API - calculate stats in JavaScript
+                const users = await db.apiQuery('users', {
+                    select: '*',
+                    order: 'created_at.desc'
+                });
+                const predictions = await db.apiQuery('predictions', { select: '*' });
+
+                // Calculate stats for each user
+                const usersWithStats = users.map(user => {
+                    const userPredictions = predictions.filter(p => p.user_id === user.id);
+                    const total_predictions = userPredictions.length;
+                    const correct_predictions = userPredictions.filter(p => p.points_earned > 0).length;
+                    const total_points = userPredictions.reduce((sum, p) => sum + (p.points_earned || 0), 0);
+
+                    return {
+                        ...user,
+                        total_predictions,
+                        correct_predictions,
+                        total_points
+                    };
+                });
+
+                return usersWithStats;
+            } else {
+                // Using SQLite
+                const users = await db.all(`
+                    SELECT
+                        u.*,
+                        COUNT(p.id) as total_predictions,
+                        SUM(CASE WHEN p.points_earned > 0 THEN 1 ELSE 0 END) as correct_predictions,
+                        SUM(p.points_earned) as total_points
+                    FROM users u
+                    LEFT JOIN predictions p ON u.id = p.user_id
+                    GROUP BY u.id
+                    ORDER BY u.created_at DESC
+                `);
+                return users;
+            }
         } catch (error) {
             console.error('Error getting all users:', error);
             throw error;
