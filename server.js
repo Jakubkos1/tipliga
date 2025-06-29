@@ -124,13 +124,25 @@ const isAdmin = (req, res, next) => {
     res.status(403).send('Access denied');
 };
 
-// Helper function to check if user is admin
+const isSuperAdmin = (req, res, next) => {
+    if (req.isAuthenticated() && checkIsSuperAdmin(req.user)) {
+        return next();
+    }
+    res.status(403).send('Access denied - Super Admin required');
+};
+
+// Helper function to check if user is a super admin (hardcoded in ADMIN_IDS)
+const checkIsSuperAdmin = (user) => {
+    return user && process.env.ADMIN_IDS && process.env.ADMIN_IDS.split(',').includes(user.discord_id);
+};
+
+// Helper function to check if user is admin (database role OR hardcoded)
 const checkIsAdmin = (user) => {
     if (!user) return false;
 
     // Check if user has admin role in database OR is in the hardcoded admin list
     const hasAdminRole = user.role === 'admin';
-    const isHardcodedAdmin = process.env.ADMIN_IDS && process.env.ADMIN_IDS.split(',').includes(user.discord_id);
+    const isHardcodedAdmin = checkIsSuperAdmin(user);
 
     return hasAdminRole || isHardcodedAdmin;
 };
@@ -364,12 +376,13 @@ app.get('/admin/users', isAuthenticated, isAdmin, async (req, res) => {
             user: req.user,
             users,
             isAdmin: true,
+            isSuperAdmin: checkIsSuperAdmin(req.user),
             success: req.query.success,
             error: req.query.error
         });
     } catch (error) {
         console.error('Error loading users:', error);
-        res.redirect('/admin?error=Chyba při načítání uživatelů');
+        res.redirect('/admin?error=Error loading users');
     }
 });
 
@@ -380,16 +393,31 @@ app.post('/admin/users/:id/role', isAuthenticated, isAdmin, async (req, res) => 
 
         // Prevent admin from changing their own role
         if (parseInt(id) === req.user.id) {
-            return res.redirect('/admin/users?error=Nemůžete změnit svou vlastní roli');
+            return res.redirect('/admin/users?error=You cannot change your own role');
+        }
+
+        // Get the target user to check their current role
+        const targetUser = await User.findById(id);
+        if (!targetUser) {
+            return res.redirect('/admin/users?error=User not found');
+        }
+
+        // Only super admins can manage admin roles
+        const isSuperAdminUser = checkIsSuperAdmin(req.user);
+        const targetIsAdmin = targetUser.role === 'admin' || checkIsSuperAdmin(targetUser);
+        const requestingAdminRole = role === 'admin';
+
+        if (!isSuperAdminUser && (targetIsAdmin || requestingAdminRole)) {
+            return res.redirect('/admin/users?error=Only super admins can manage admin roles');
         }
 
         await User.updateUserRole(id, role);
-        console.log(`✅ Admin ${req.user.username} changed user ${id} role to ${role}`);
+        console.log(`✅ ${isSuperAdminUser ? 'Super Admin' : 'Admin'} ${req.user.username} changed user ${id} role to ${role}`);
 
-        res.redirect('/admin/users?success=Role byla úspěšně změněna');
+        res.redirect('/admin/users?success=Role was successfully changed');
     } catch (error) {
         console.error('Error updating user role:', error);
-        res.redirect('/admin/users?error=Chyba při změně role');
+        res.redirect('/admin/users?error=Error changing role');
     }
 });
 

@@ -96,14 +96,28 @@
                                                 admin (you)
                                             </span>
                                         <% } else { %>
-                                            <form action="/admin/users/<%= userItem.id %>/role" method="POST" class="inline">
-                                                <select name="role" onchange="this.form.submit()"
-                                                        class="text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                    <option value="user" <%= userItem.role === 'user' ? 'selected' : '' %>>User</option>
-                                                    <option value="moderator" <%= userItem.role === 'moderator' ? 'selected' : '' %>>Moderator</option>
-                                                    <option value="admin" <%= userItem.role === 'admin' ? 'selected' : '' %>>Admin</option>
-                                                </select>
-                                            </form>
+                                            <%
+                                                // Check if current user is super admin and if target user is admin
+                                                const targetIsAdmin = userItem.role === 'admin';
+                                                const canManageAdmins = isSuperAdmin;
+                                                const canEditThisUser = canManageAdmins || !targetIsAdmin;
+                                            %>
+                                            <% if (canEditThisUser) { %>
+                                                <form action="/admin/users/<%= userItem.id %>/role" method="POST" class="inline">
+                                                    <select name="role" onchange="this.form.submit()"
+                                                            class="text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                        <option value="user" <%= userItem.role === 'user' ? 'selected' : '' %>>User</option>
+                                                        <option value="moderator" <%= userItem.role === 'moderator' ? 'selected' : '' %>>Moderator</option>
+                                                        <% if (isSuperAdmin) { %>
+                                                            <option value="admin" <%= userItem.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                                        <% } %>
+                                                    </select>
+                                                </form>
+                                            <% } else { %>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    admin (protected)
+                                                </span>
+                                            <% } %>
                                         <% } %>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -183,12 +197,25 @@
                         <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                             <li>• All moderator permissions</li>
                             <li>• Delete matches</li>
-                            <li>• Manage user roles</li>
+                            <li>• Manage user/moderator roles</li>
                             <li>• Reset user statistics</li>
                             <li>• Delete users</li>
                             <li>• Full system access</li>
                         </ul>
                     </div>
+
+                    <% if (isSuperAdmin) { %>
+                    <div class="border border-red-200 dark:border-red-600 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
+                        <h3 class="font-semibold text-red-900 dark:text-red-100 mb-2">👑 Super Admin (You)</h3>
+                        <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+                            <li>• All admin permissions</li>
+                            <li>• Promote users to admin</li>
+                            <li>• Demote other admins</li>
+                            <li>• Manage admin roles</li>
+                            <li>• Ultimate system control</li>
+                        </ul>
+                    </div>
+                    <% } %>
                 </div>
             </div>
         </div>
