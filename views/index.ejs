@@ -176,7 +176,13 @@
                                 <%
                                     const now = new Date();
                                     const matchDate = new Date(match.match_time);
-                                    const isLive = now.getTime() >= matchDate.getTime();
+
+                                    // Apply the same timezone correction as in isMatchLocked
+                                    const pragueOffset = 2 * 60 * 60 * 1000; // 2 hours in milliseconds (summer time)
+                                    const adjustedMatchTime = matchDate.getTime() - pragueOffset;
+                                    const adjustedMatchDate = new Date(adjustedMatchTime);
+
+                                    const isLive = now.getTime() >= adjustedMatchTime;
                                 %>
                                 <% if (match.is_locked) { %>
                                     <div class="text-center">
