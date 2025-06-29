@@ -118,7 +118,7 @@ const isAuthenticated = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-    if (req.isAuthenticated() && process.env.ADMIN_IDS.split(',').includes(req.user.discord_id)) {
+    if (req.isAuthenticated() && checkIsAdmin(req.user)) {
         return next();
     }
     res.status(403).send('Access denied');
@@ -126,7 +126,13 @@ const isAdmin = (req, res, next) => {
 
 // Helper function to check if user is admin
 const checkIsAdmin = (user) => {
-    return user && process.env.ADMIN_IDS.split(',').includes(user.discord_id);
+    if (!user) return false;
+
+    // Check if user has admin role in database OR is in the hardcoded admin list
+    const hasAdminRole = user.role === 'admin';
+    const isHardcodedAdmin = process.env.ADMIN_IDS && process.env.ADMIN_IDS.split(',').includes(user.discord_id);
+
+    return hasAdminRole || isHardcodedAdmin;
 };
 
 // Helper function to check if user is moderator (can manage matches but not users)
