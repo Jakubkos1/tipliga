@@ -74,6 +74,11 @@ class Match {
 
     static async findById(id) {
         try {
+            // Handle null/undefined ID
+            if (!id) {
+                return null;
+            }
+
             // Check if using Supabase API or SQLite
             if (db.apiQuery) {
                 // Using Supabase API
@@ -96,12 +101,31 @@ class Match {
     static async create(matchData) {
         try {
             const { teamA, teamB, matchTime } = matchData;
-            const result = await db.run(
-                'INSERT INTO matches (team_a, team_b, match_time) VALUES (?, ?, ?)',
-                [teamA, teamB, matchTime]
-            );
-            
-            return await this.findById(result.id);
+
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                const created = await db.apiQuery('matches', {
+                    method: 'POST',
+                    body: {
+                        team_a: teamA,
+                        team_b: teamB,
+                        match_time: matchTime,
+                        status: 'upcoming',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                });
+                return created[0];
+            } else {
+                // Using SQLite
+                const result = await db.run(
+                    'INSERT INTO matches (team_a, team_b, match_time) VALUES (?, ?, ?)',
+                    [teamA, teamB, matchTime]
+                );
+
+                return await this.findById(result.id);
+            }
         } catch (error) {
             console.error('Error creating match:', error);
             throw error;
@@ -110,14 +134,29 @@ class Match {
 
     static async updateResult(matchId, winner) {
         try {
-            await db.run(
-                'UPDATE matches SET winner = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-                [winner, 'finished', matchId]
-            );
-            
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                await db.apiQuery('matches', {
+                    method: 'PATCH',
+                    filter: `id=eq.${matchId}`,
+                    body: {
+                        winner: winner,
+                        status: 'finished',
+                        updated_at: new Date().toISOString()
+                    }
+                });
+            } else {
+                // Using SQLite
+                await db.run(
+                    'UPDATE matches SET winner = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    [winner, 'finished', matchId]
+                );
+            }
+
             // Award points to correct predictions
             await this.awardPoints(matchId, winner);
-            
+
             return await this.findById(matchId);
         } catch (error) {
             console.error('Error updating match result:', error);
@@ -127,11 +166,23 @@ class Match {
 
     static async awardPoints(matchId, winner) {
         try {
-            // Award 1 point for correct predictions
-            await db.run(
-                'UPDATE predictions SET points_earned = 1 WHERE match_id = ? AND predicted_winner = ?',
-                [matchId, winner]
-            );
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                await db.apiQuery('predictions', {
+                    method: 'PATCH',
+                    filter: `match_id=eq.${matchId}&predicted_winner=eq.${winner}`,
+                    body: {
+                        points_earned: 1
+                    }
+                });
+            } else {
+                // Using SQLite
+                await db.run(
+                    'UPDATE predictions SET points_earned = 1 WHERE match_id = ? AND predicted_winner = ?',
+                    [matchId, winner]
+                );
+            }
         } catch (error) {
             console.error('Error awarding points:', error);
             throw error;
