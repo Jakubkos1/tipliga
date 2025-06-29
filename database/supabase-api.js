@@ -83,6 +83,7 @@ class SupabaseAPI {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('❌ Supabase API Error Details:', errorText);
+                console.error('❌ Request details:', { url, method, body: fetchOptions.body });
                 throw new Error(`Supabase API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
 

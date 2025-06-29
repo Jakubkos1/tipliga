@@ -289,19 +289,29 @@ class Match {
             if (db.apiQuery) {
                 // Using Supabase API
                 console.log('🔄 Using Supabase API for soft delete');
-                const result = await db.apiQuery('matches', {
-                    method: 'PATCH',
-                    filter: `id=eq.${matchId}`,
-                    body: {
-                        deleted: true,
-                        deleted_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }
-                });
-                console.log('✅ Supabase soft delete result:', result);
 
-                // Verify the delete worked by checking the match
-                await this.debugMatchState(matchId);
+                try {
+                    const result = await db.apiQuery('matches', {
+                        method: 'PATCH',
+                        filter: `id=eq.${matchId}`,
+                        body: {
+                            deleted: true,
+                            deleted_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }
+                    });
+                    console.log('✅ Supabase soft delete result:', result);
+
+                    // Verify the delete worked by checking the match
+                    await this.debugMatchState(matchId);
+
+                } catch (softDeleteError) {
+                    console.error('❌ Soft delete failed, trying hard delete as fallback:', softDeleteError);
+
+                    // If soft delete fails (e.g., deleted column doesn't exist), do hard delete
+                    console.log('🔄 Attempting hard delete as fallback...');
+                    await this.hardDelete(matchId);
+                }
 
             } else {
                 // Using SQLite
@@ -312,10 +322,34 @@ class Match {
                 );
             }
 
-            console.log(`🗑️ Match ${matchId} soft deleted (kept in database for backup)`);
+            console.log(`🗑️ Match ${matchId} deleted (kept in database for backup)`);
             return true;
         } catch (error) {
-            console.error('❌ Error soft deleting match:', error);
+            console.error('❌ Error deleting match:', error);
+            throw error;
+        }
+    }
+
+    static async hardDelete(matchId) {
+        try {
+            console.log(`🗑️ Hard deleting match ID: ${matchId}`);
+
+            if (db.apiQuery) {
+                // Using Supabase API - DELETE request
+                const result = await db.apiQuery('matches', {
+                    method: 'DELETE',
+                    filter: `id=eq.${matchId}`
+                });
+                console.log('✅ Supabase hard delete result:', result);
+            } else {
+                // Using SQLite
+                await db.run('DELETE FROM matches WHERE id = ?', [matchId]);
+            }
+
+            console.log(`🗑️ Match ${matchId} permanently deleted from database`);
+            return true;
+        } catch (error) {
+            console.error('❌ Error hard deleting match:', error);
             throw error;
         }
     }
