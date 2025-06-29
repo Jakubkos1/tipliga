@@ -34,14 +34,20 @@ class SupabaseAPI {
             };
 
             // Handle different query types
+            const queryParams = [];
+
             if (options.select) {
-                url += `?select=${options.select}`;
+                queryParams.push(`select=${options.select}`);
             }
             if (options.filter) {
-                url += (url.includes('?') ? '&' : '?') + options.filter;
+                queryParams.push(options.filter);
             }
             if (options.order) {
-                url += (url.includes('?') ? '&' : '?') + `order=${options.order}`;
+                queryParams.push(`order=${options.order}`);
+            }
+
+            if (queryParams.length > 0) {
+                url += `?${queryParams.join('&')}`;
             }
 
             const method = options.method || 'GET';
@@ -112,7 +118,11 @@ class SupabaseAPI {
     }
 
     async all(table, filter = '') {
-        return await this.apiQuery(table, { filter, select: '*' });
+        const options = { select: '*' };
+        if (filter && filter.trim()) {
+            options.filter = filter;
+        }
+        return await this.apiQuery(table, options);
     }
 
     // User methods
@@ -139,11 +149,18 @@ class SupabaseAPI {
 
     // Match methods
     async getAllMatches() {
-        return await this.all('matches', 'order=match_time.asc');
+        return await this.apiQuery('matches', {
+            select: '*',
+            order: 'match_time.asc'
+        });
     }
 
     async getUpcomingMatches() {
-        return await this.all('matches', `status=eq.upcoming&order=match_time.asc`);
+        return await this.apiQuery('matches', {
+            select: '*',
+            filter: 'status=eq.upcoming',
+            order: 'match_time.asc'
+        });
     }
 
     async createMatch(matchData) {
