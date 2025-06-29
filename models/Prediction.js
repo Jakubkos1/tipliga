@@ -119,21 +119,45 @@ class Prediction {
 
     static async getStats() {
         try {
-            const stats = await db.get(`
-                SELECT 
-                    COUNT(*) as total_predictions,
-                    COUNT(DISTINCT user_id) as total_users,
-                    COUNT(DISTINCT match_id) as total_matches,
-                    COUNT(CASE WHEN points_earned > 0 THEN 1 END) as correct_predictions
-                FROM predictions
-            `);
-            
-            return {
-                ...stats,
-                accuracy: stats.total_predictions > 0 
-                    ? Math.round((stats.correct_predictions / stats.total_predictions) * 100) 
-                    : 0
-            };
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API - calculate stats in JavaScript
+                const predictions = await db.apiQuery('predictions', {
+                    select: '*'
+                });
+
+                const total_predictions = predictions.length;
+                const total_users = new Set(predictions.map(p => p.user_id)).size;
+                const total_matches = new Set(predictions.map(p => p.match_id)).size;
+                const correct_predictions = predictions.filter(p => p.points_earned > 0).length;
+
+                return {
+                    total_predictions,
+                    total_users,
+                    total_matches,
+                    correct_predictions,
+                    accuracy: total_predictions > 0
+                        ? Math.round((correct_predictions / total_predictions) * 100)
+                        : 0
+                };
+            } else {
+                // Using SQLite
+                const stats = await db.get(`
+                    SELECT
+                        COUNT(*) as total_predictions,
+                        COUNT(DISTINCT user_id) as total_users,
+                        COUNT(DISTINCT match_id) as total_matches,
+                        COUNT(CASE WHEN points_earned > 0 THEN 1 END) as correct_predictions
+                    FROM predictions
+                `);
+
+                return {
+                    ...stats,
+                    accuracy: stats.total_predictions > 0
+                        ? Math.round((stats.correct_predictions / stats.total_predictions) * 100)
+                        : 0
+                };
+            }
         } catch (error) {
             console.error('Error getting prediction stats:', error);
             throw error;
