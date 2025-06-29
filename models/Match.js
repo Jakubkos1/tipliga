@@ -170,19 +170,32 @@ class Match {
             // Check if using Supabase API or SQLite
             if (db.apiQuery) {
                 // Using Supabase API
-                await db.apiQuery('predictions', {
-                    method: 'PATCH',
-                    filter: `match_id=eq.${matchId}&predicted_winner=eq.${winner}`,
-                    body: {
-                        points_earned: 1
+                // First check if points_earned column exists by trying to update
+                try {
+                    await db.apiQuery('predictions', {
+                        method: 'PATCH',
+                        filter: `match_id=eq.${matchId}&predicted_winner=eq.${winner}`,
+                        body: {
+                            points_earned: 1
+                        }
+                    });
+                    console.log(`✅ Awarded 1 point to correct predictions for match ${matchId}`);
+                } catch (columnError) {
+                    if (columnError.message.includes('points_earned')) {
+                        console.log(`⚠️ Points column missing - skipping points award for match ${matchId}. Please add 'points_earned' column to predictions table.`);
+                        // Continue without awarding points - match result will still be set
+                        return;
+                    } else {
+                        throw columnError;
                     }
-                });
+                }
             } else {
                 // Using SQLite
                 await db.run(
                     'UPDATE predictions SET points_earned = 1 WHERE match_id = ? AND predicted_winner = ?',
                     [matchId, winner]
                 );
+                console.log(`✅ Awarded 1 point to correct predictions for match ${matchId}`);
             }
         } catch (error) {
             console.error('Error awarding points:', error);
