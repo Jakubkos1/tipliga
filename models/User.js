@@ -17,13 +17,24 @@ class User {
     static async create(userData) {
         try {
             const { discordId, username, avatarUrl } = userData;
-            const result = await db.run(
-                'INSERT INTO users (discord_id, username, avatar_url) VALUES (?, ?, ?)',
-                [discordId, username, avatarUrl]
-            );
-            
-            // Return the created user
-            return await this.findById(result.id);
+
+            // Use PostgreSQL RETURNING clause or SQLite lastID
+            const isPostgres = process.env.DATABASE_URL && process.env.NODE_ENV === 'production';
+
+            if (isPostgres) {
+                const result = await db.query(
+                    'INSERT INTO users (discord_id, username, avatar_url) VALUES ($1, $2, $3) RETURNING id',
+                    [discordId, username, avatarUrl]
+                );
+                const userId = result.rows[0].id;
+                return await this.findById(userId);
+            } else {
+                const result = await db.run(
+                    'INSERT INTO users (discord_id, username, avatar_url) VALUES (?, ?, ?)',
+                    [discordId, username, avatarUrl]
+                );
+                return await this.findById(result.id);
+            }
         } catch (error) {
             console.error('Error creating user:', error);
             throw error;
