@@ -208,33 +208,29 @@ class Match {
     static isMatchLocked(matchTime, status) {
         if (status !== 'upcoming') return true;
 
-        // Get current time in Prague timezone
+        // Simple approach: adjust the server time to match the timezone issue
         const now = new Date();
-        const pragueNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Prague"}));
+        const matchDate = new Date(matchTime);
 
-        // Parse match time and treat it as Prague time
-        let matchDate = new Date(matchTime);
-
-        // If the match time doesn't have timezone info, treat it as Prague time
-        if (typeof matchTime === 'string' && !matchTime.includes('Z') && !matchTime.includes('+')) {
-            // The match time is stored as "2025-06-29T17:02:00" but should be treated as Prague time
-            // We need to convert it from what the server thinks is UTC to Prague time
-            const pragueMatchTime = new Date(matchTime + '+01:00'); // Assume Prague timezone
-            matchDate = pragueMatchTime;
-        }
+        // The issue is that match times are stored as if they were UTC, but they're actually Prague time
+        // So we need to subtract 2 hours from the match time to get the correct comparison
+        // Prague is UTC+2 in summer, so match time needs to be adjusted
+        const pragueOffset = 2 * 60 * 60 * 1000; // 2 hours in milliseconds (summer time)
+        const adjustedMatchTime = matchDate.getTime() - pragueOffset;
+        const adjustedMatchDate = new Date(adjustedMatchTime);
 
         const lockTime = 60 * 60 * 1000; // 1 hour before match
-        const timeUntilMatch = matchDate - pragueNow;
+        const timeUntilMatch = adjustedMatchDate - now;
         const minutesUntilMatch = Math.round(timeUntilMatch / (1000 * 60));
 
         // Debug timezone info with more details
-        console.log('🕐 Prague Timezone Debug (Fixed):');
-        console.log('  Server time (now):', now.toISOString());
-        console.log('  Prague time (now):', pragueNow.toISOString());
-        console.log('  Prague time (formatted):', pragueNow.toLocaleString('cs-CZ'));
+        console.log('🕐 Timezone Debug (Offset Corrected):');
+        console.log('  Server time (UTC):', now.toISOString());
+        console.log('  Server time (Prague):', now.toLocaleString('cs-CZ', {timeZone: 'Europe/Prague'}));
         console.log('  Match time (input):', matchTime);
-        console.log('  Match time (parsed as Prague):', matchDate.toISOString());
-        console.log('  Match time (Prague formatted):', matchDate.toLocaleString('cs-CZ'));
+        console.log('  Match time (original):', matchDate.toISOString());
+        console.log('  Match time (adjusted -2h):', adjustedMatchDate.toISOString());
+        console.log('  Match time (adjusted Prague):', adjustedMatchDate.toLocaleString('cs-CZ', {timeZone: 'Europe/Prague'}));
         console.log('  Time difference (ms):', timeUntilMatch);
         console.log('  Time until match (minutes):', minutesUntilMatch);
         console.log('  Lock time (minutes):', lockTime / (1000 * 60));
