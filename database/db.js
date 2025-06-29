@@ -2,14 +2,15 @@ const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
 
-// Use PostgreSQL if DATABASE_URL or POSTGRES_URL is set
-const usePostgres = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+// Temporarily disable PostgreSQL due to SSL issues on Vercel
+// Use SQLite with file persistence instead
+const usePostgres = false; // Temporarily disabled
 
 if (usePostgres) {
     console.log('🐘 Using PostgreSQL database (Supabase)');
     module.exports = require('./postgres-db');
 } else {
-    console.log('🗄️ Using SQLite database (local development)');
+    console.log('🗄️ Using SQLite database (file-based for persistence)');
 
 class Database {
     constructor() {
@@ -18,12 +19,11 @@ class Database {
     }
 
     init() {
-        // Use in-memory database for Vercel (read-only filesystem)
-        // or file database for local development
+        // Use file database for persistence (Vercel allows /tmp directory)
         const isProduction = process.env.NODE_ENV === 'production';
-        const dbPath = isProduction ? ':memory:' : path.join(__dirname, 'tipliga.db');
+        const dbPath = isProduction ? '/tmp/tipliga.db' : path.join(__dirname, 'tipliga.db');
 
-        console.log(`🗄️ Using ${isProduction ? 'in-memory' : 'file'} database`);
+        console.log(`🗄️ Using ${isProduction ? 'temporary file' : 'local file'} database: ${dbPath}`);
 
         this.db = new sqlite3.Database(dbPath, (err) => {
             if (err) {
