@@ -251,42 +251,93 @@ class User {
                 throw new Error('Invalid role');
             }
 
-            await db.run(
-                'UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-                [role, userId]
-            );
+            console.log(`🔄 Updating user ${userId} role to ${role}...`);
 
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                const result = await db.apiQuery('users', {
+                    method: 'PATCH',
+                    filter: `id=eq.${userId}`,
+                    body: {
+                        role: role,
+                        updated_at: new Date().toISOString()
+                    }
+                });
+                console.log(`✅ Supabase role update result:`, result);
+            } else {
+                // Using SQLite
+                await db.run(
+                    'UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    [role, userId]
+                );
+            }
+
+            console.log(`✅ User ${userId} role updated to ${role}`);
             return await this.findById(userId);
         } catch (error) {
-            console.error('Error updating user role:', error);
+            console.error('❌ Error updating user role:', error);
             throw error;
         }
     }
 
     static async resetUserStats(userId) {
         try {
-            // Delete all predictions for the user
-            await db.run('DELETE FROM predictions WHERE user_id = ?', [userId]);
+            console.log(`🔄 Resetting statistics for user ${userId}...`);
+
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                const result = await db.apiQuery('predictions', {
+                    method: 'DELETE',
+                    filter: `user_id=eq.${userId}`
+                });
+                console.log(`✅ Supabase delete predictions result:`, result);
+            } else {
+                // Using SQLite
+                await db.run('DELETE FROM predictions WHERE user_id = ?', [userId]);
+            }
+
             console.log(`✅ Reset statistics for user ID: ${userId}`);
             return true;
         } catch (error) {
-            console.error('Error resetting user stats:', error);
+            console.error('❌ Error resetting user stats:', error);
             throw error;
         }
     }
 
     static async deleteUser(userId) {
         try {
-            // First delete all predictions (cascade should handle this, but being explicit)
-            await db.run('DELETE FROM predictions WHERE user_id = ?', [userId]);
+            console.log(`🔄 Deleting user ${userId}...`);
 
-            // Then delete the user
-            await db.run('DELETE FROM users WHERE id = ?', [userId]);
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                // First delete all predictions
+                await db.apiQuery('predictions', {
+                    method: 'DELETE',
+                    filter: `user_id=eq.${userId}`
+                });
+
+                // Then delete the user
+                const result = await db.apiQuery('users', {
+                    method: 'DELETE',
+                    filter: `id=eq.${userId}`
+                });
+                console.log(`✅ Supabase delete user result:`, result);
+            } else {
+                // Using SQLite
+                // First delete all predictions (cascade should handle this, but being explicit)
+                await db.run('DELETE FROM predictions WHERE user_id = ?', [userId]);
+
+                // Then delete the user
+                await db.run('DELETE FROM users WHERE id = ?', [userId]);
+            }
 
             console.log(`✅ Deleted user ID: ${userId}`);
             return true;
         } catch (error) {
-            console.error('Error deleting user:', error);
+            console.error('❌ Error deleting user:', error);
             throw error;
         }
     }
