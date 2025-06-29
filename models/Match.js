@@ -167,6 +167,12 @@ class Match {
 
     static async awardPoints(matchId, winner) {
         try {
+            // 🚫 TEMPORARILY DISABLED FOR TESTING - UNCOMMENT TO RE-ENABLE POINTS
+            console.log(`⏸️ Points awarding temporarily disabled for testing. Match ${matchId}, winner: ${winner}`);
+            console.log(`🔄 To re-enable: uncomment the code in Match.awardPoints() method`);
+            return;
+
+            /* COMMENTED OUT FOR TESTING - UNCOMMENT TO RE-ENABLE:
             // Check if using Supabase API or SQLite
             if (db.apiQuery) {
                 // Using Supabase API
@@ -197,6 +203,7 @@ class Match {
                 );
                 console.log(`✅ Awarded 1 point to correct predictions for match ${matchId}`);
             }
+            */
         } catch (error) {
             console.error('Error awarding points:', error);
             throw error;
