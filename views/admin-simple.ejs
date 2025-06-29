@@ -187,12 +187,6 @@
                                             <% } %>
 
                                             <!-- Set Result Buttons and Reset -->
-                                            <!-- DEBUG: Show match info -->
-                                            <div class="text-xs text-gray-400 mb-1">
-                                                Debug: status=<%= match.status %>, winner=<%= match.winner || 'none' %>, isAdmin=<%= isAdmin %>
-                                            </div>
-
-                                            <!-- TESTING: Show buttons for upcoming OR finished matches -->
                                             <% if (match.status === 'upcoming' || match.status === 'finished') { %>
                                                 <div class="border-l pl-2 ml-2 flex space-x-1">
                                                     <% if (!match.winner) { %>
@@ -218,10 +212,6 @@
                                                             </button>
                                                         </form>
                                                     <% } %>
-                                                </div>
-                                            <% } else { %>
-                                                <div class="text-xs text-gray-500">
-                                                    Status: <%= match.status %> (no buttons available)
                                                 </div>
                                             <% } %>
                                         </div>
