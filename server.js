@@ -38,6 +38,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Add request logging for debugging
+app.use((req, res, next) => {
+    if (req.method === 'DELETE' || req.originalUrl.includes('/admin/matches')) {
+        console.log(`📝 Request: ${req.method} ${req.originalUrl}`);
+    }
+    next();
+});
+
 // Session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback-secret-key',
@@ -578,6 +586,16 @@ app.put('/admin/matches/:id', isAdmin, async (req, res) => {
         console.error('Error updating match:', error);
         res.status(500).json({ error: 'Error updating match' });
     }
+});
+
+// Add middleware to log all DELETE requests
+app.use('/admin/matches', (req, res, next) => {
+    if (req.method === 'DELETE') {
+        console.log(`🔍 DELETE request intercepted: ${req.method} ${req.originalUrl}`);
+        console.log(`🔍 Request params:`, req.params);
+        console.log(`🔍 User:`, req.user?.username || 'Not authenticated');
+    }
+    next();
 });
 
 app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
