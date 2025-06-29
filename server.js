@@ -555,19 +555,7 @@ app.post('/admin/matches/:id/edit', isAuthenticated, (req, res, next) => {
     }
 });
 
-app.post('/admin/matches/:id/delete', isAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
 
-        await Match.delete(id);
-        console.log(`✅ Admin ${req.user.username} deleted match ID: ${id}`);
-
-        res.redirect('/admin?success=Zápas byl úspěšně smazán!');
-    } catch (error) {
-        console.error('Error deleting match:', error);
-        res.redirect('/admin?error=Chyba při mazání zápasu');
-    }
-});
 
 app.put('/admin/matches/:id', isAdmin, async (req, res) => {
     try {
