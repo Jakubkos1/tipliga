@@ -167,12 +167,6 @@ class Match {
 
     static async awardPoints(matchId, winner) {
         try {
-            // 🚫 TEMPORARILY DISABLED FOR TESTING - UNCOMMENT TO RE-ENABLE POINTS
-            console.log(`⏸️ Points awarding temporarily disabled for testing. Match ${matchId}, winner: ${winner}`);
-            console.log(`🔄 To re-enable: uncomment the code in Match.awardPoints() method`);
-            return;
-
-            /* COMMENTED OUT FOR TESTING - UNCOMMENT TO RE-ENABLE:
             // Check if using Supabase API or SQLite
             if (db.apiQuery) {
                 // Using Supabase API
@@ -203,7 +197,6 @@ class Match {
                 );
                 console.log(`✅ Awarded 1 point to correct predictions for match ${matchId}`);
             }
-            */
         } catch (error) {
             console.error('Error awarding points:', error);
             throw error;
@@ -317,10 +310,18 @@ class Match {
     }
 
     static canEvaluateMatch(matchTime, status) {
+        // 🚫 TEMPORARILY DISABLED TIME RESTRICTION FOR TESTING
+        console.log('⏸️ Match time restriction temporarily disabled for testing');
+        console.log('🔄 Can evaluate any upcoming match regardless of time');
+
         // Can evaluate if match has started (not just finished)
         if (status === 'finished') return true; // Already evaluated
         if (status !== 'upcoming') return false; // Invalid status
 
+        // TEMPORARILY ALLOW EVALUATION AT ANY TIME FOR TESTING
+        return true;
+
+        /* COMMENTED OUT FOR TESTING - UNCOMMENT TO RE-ENABLE TIME RESTRICTION:
         // Apply the same timezone correction as in isMatchLocked
         const now = new Date();
         const matchDate = new Date(matchTime);
@@ -339,6 +340,7 @@ class Match {
 
         // Can evaluate if match has started (current time >= adjusted match time)
         return now >= adjustedMatchDate;
+        */
     }
 
     static getMatchStatus(matchTime, currentStatus) {
