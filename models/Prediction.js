@@ -115,14 +115,15 @@ class Prediction {
                         team_b: match?.team_b,
                         match_time: match?.match_time,
                         winner: match?.winner,
-                        status: match?.status
+                        status: match?.status,
+                        deleted: match?.deleted
                     };
                 }));
 
-                // Sort by match_time DESC
-                return predictionsWithMatches.sort((a, b) =>
-                    new Date(b.match_time) - new Date(a.match_time)
-                );
+                // Filter out predictions for deleted matches and sort by match_time DESC
+                return predictionsWithMatches
+                    .filter(prediction => !prediction.deleted)
+                    .sort((a, b) => new Date(b.match_time) - new Date(a.match_time));
             } else {
                 // Using SQLite
                 const predictions = await db.all(`
@@ -135,7 +136,7 @@ class Prediction {
                         m.status
                     FROM predictions p
                     JOIN matches m ON p.match_id = m.id
-                    WHERE p.user_id = ?
+                    WHERE p.user_id = ? AND (m.deleted = 0 OR m.deleted IS NULL)
                     ORDER BY m.match_time DESC
                 `, [userId]);
 
@@ -175,11 +176,18 @@ class Prediction {
                 const predictions = await db.apiQuery('predictions', {
                     select: '*'
                 });
+                const matches = await db.apiQuery('matches', { select: '*' });
 
-                const total_predictions = predictions.length;
-                const total_users = new Set(predictions.map(p => p.user_id)).size;
-                const total_matches = new Set(predictions.map(p => p.match_id)).size;
-                const correct_predictions = predictions.filter(p => p.points_earned > 0).length;
+                // Filter out predictions for deleted matches
+                const validPredictions = predictions.filter(prediction => {
+                    const match = matches.find(m => m.id === prediction.match_id);
+                    return match && !match.deleted;
+                });
+
+                const total_predictions = validPredictions.length;
+                const total_users = new Set(validPredictions.map(p => p.user_id)).size;
+                const total_matches = new Set(validPredictions.map(p => p.match_id)).size;
+                const correct_predictions = validPredictions.filter(p => p.points_earned > 0).length;
 
                 return {
                     total_predictions,

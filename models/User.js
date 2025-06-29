@@ -131,10 +131,17 @@ class User {
                 // Using Supabase API - calculate leaderboard in JavaScript
                 const users = await db.apiQuery('users', { select: '*' });
                 const predictions = await db.apiQuery('predictions', { select: '*' });
+                const matches = await db.apiQuery('matches', { select: '*' });
+
+                // Filter out predictions for deleted matches
+                const validPredictions = predictions.filter(prediction => {
+                    const match = matches.find(m => m.id === prediction.match_id);
+                    return match && !match.deleted;
+                });
 
                 // Calculate stats for each user
                 const leaderboard = users.map(user => {
-                    const userPredictions = predictions.filter(p => p.user_id === user.id);
+                    const userPredictions = validPredictions.filter(p => p.user_id === user.id);
                     const total_predictions = userPredictions.length;
                     const total_points = userPredictions.reduce((sum, p) => sum + (p.points_earned || 0), 0);
                     const correct_predictions = userPredictions.filter(p => p.points_earned > 0).length;
@@ -191,10 +198,17 @@ class User {
                     order: 'created_at.desc'
                 });
                 const predictions = await db.apiQuery('predictions', { select: '*' });
+                const matches = await db.apiQuery('matches', { select: '*' });
+
+                // Filter out predictions for deleted matches
+                const validPredictions = predictions.filter(prediction => {
+                    const match = matches.find(m => m.id === prediction.match_id);
+                    return match && !match.deleted;
+                });
 
                 // Calculate stats for each user
                 const usersWithStats = users.map(user => {
-                    const userPredictions = predictions.filter(p => p.user_id === user.id);
+                    const userPredictions = validPredictions.filter(p => p.user_id === user.id);
                     const total_predictions = userPredictions.length;
                     const correct_predictions = userPredictions.filter(p => p.points_earned > 0).length;
                     const total_points = userPredictions.reduce((sum, p) => sum + (p.points_earned || 0), 0);
