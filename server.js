@@ -184,7 +184,13 @@ app.get('/debug-db', async (req, res) => {
 app.get('/', async (req, res) => {
     try {
         const matches = await Match.getUpcoming();
-        
+
+        // Add locking information to each match
+        const matchesWithLocking = matches.map(match => ({
+            ...match,
+            is_locked: Match.isMatchLocked(match.match_time, match.status)
+        }));
+
         // Get user predictions if logged in
         let userPredictions = {};
         if (req.user) {
@@ -194,13 +200,13 @@ app.get('/', async (req, res) => {
                 return acc;
             }, {});
         }
-        
+
         console.log('🏠 Rendering homepage for user:', req.user);
         console.log('🔐 Is admin:', checkIsAdmin(req.user));
 
         res.render('index', {
             user: req.user,
-            matches,
+            matches: matchesWithLocking,
             userPredictions,
             isAdmin: checkIsAdmin(req.user),
             isModerator: checkIsModerator(req.user)
