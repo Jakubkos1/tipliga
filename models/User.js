@@ -23,22 +23,35 @@ class User {
         try {
             const { discordId, username, avatarUrl } = userData;
 
-            // Use PostgreSQL RETURNING clause or SQLite lastID
-            const isPostgres = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
-
-            if (isPostgres) {
-                const result = await db.query(
-                    'INSERT INTO users (discord_id, username, avatar_url) VALUES ($1, $2, $3) RETURNING id',
-                    [discordId, username, avatarUrl]
-                );
-                const userId = result.rows[0].id;
-                return await this.findById(userId);
+            // Check if using Supabase API or SQLite
+            if (db.createUser) {
+                // Using Supabase API
+                console.log('👤 Creating user with Supabase API:', { discordId, username, avatarUrl });
+                const newUser = await db.createUser({
+                    discord_id: discordId,
+                    username: username,
+                    avatar_url: avatarUrl
+                });
+                console.log('✅ Created user:', newUser);
+                return newUser;
             } else {
-                const result = await db.run(
-                    'INSERT INTO users (discord_id, username, avatar_url) VALUES (?, ?, ?)',
-                    [discordId, username, avatarUrl]
-                );
-                return await this.findById(result.id);
+                // Using SQLite
+                const isPostgres = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+
+                if (isPostgres) {
+                    const result = await db.query(
+                        'INSERT INTO users (discord_id, username, avatar_url) VALUES ($1, $2, $3) RETURNING id',
+                        [discordId, username, avatarUrl]
+                    );
+                    const userId = result.rows[0].id;
+                    return await this.findById(userId);
+                } else {
+                    const result = await db.run(
+                        'INSERT INTO users (discord_id, username, avatar_url) VALUES (?, ?, ?)',
+                        [discordId, username, avatarUrl]
+                    );
+                    return await this.findById(result.id);
+                }
             }
         } catch (error) {
             console.error('Error creating user:', error);
@@ -48,8 +61,19 @@ class User {
 
     static async findById(id) {
         try {
-            const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
-            return user;
+            // Check if using Supabase API or SQLite
+            if (db.get && typeof db.get === 'function' && !db.apiQuery) {
+                // Using SQLite
+                const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+                return user;
+            } else {
+                // Using Supabase API
+                const users = await db.apiQuery('users', {
+                    filter: `id=eq.${id}`,
+                    select: '*'
+                });
+                return users[0] || null;
+            }
         } catch (error) {
             console.error('Error finding user by ID:', error);
             throw error;
@@ -70,10 +94,20 @@ class User {
             if (existingUser) {
                 console.log('👤 Updating existing user:', existingUser.id);
                 // Update existing user
-                await db.run(
-                    'UPDATE users SET username = ?, avatar_url = ?, updated_at = CURRENT_TIMESTAMP WHERE discord_id = ?',
-                    [username, discordProfile.avatar, discordProfile.id]
-                );
+                if (db.updateUser) {
+                    // Using Supabase API
+                    await db.updateUser(existingUser.id, {
+                        username: username,
+                        avatar_url: discordProfile.avatar,
+                        updated_at: new Date().toISOString()
+                    });
+                } else {
+                    // Using SQLite
+                    await db.run(
+                        'UPDATE users SET username = ?, avatar_url = ?, updated_at = CURRENT_TIMESTAMP WHERE discord_id = ?',
+                        [username, discordProfile.avatar, discordProfile.id]
+                    );
+                }
                 return await this.findByDiscordId(discordProfile.id);
             } else {
                 console.log('👤 Creating new user');
