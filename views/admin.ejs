@@ -221,6 +221,8 @@
                                     loading: false,
                                     showTeamButtons: <%= !match.winner ? 'true' : 'false' %>,
                                     async setResult(winner) {
+                                        console.log('🔄 setResult called with winner:', winner);
+                                        console.log('🔄 showTeamButtons before:', this.showTeamButtons);
                                         this.loading = true;
                                         try {
                                             const response = await fetch(`/admin/matches/<%= match.id %>/result`, {
@@ -247,7 +249,9 @@
                                                 }
 
                                                 // Hide team buttons and show reset button
+                                                console.log('🔄 Setting showTeamButtons to false');
                                                 this.showTeamButtons = false;
+                                                console.log('🔄 showTeamButtons after:', this.showTeamButtons);
                                             } else {
                                                 this.$dispatch('show-error', 'Chyba: ' + result.error);
                                             }
@@ -460,6 +464,9 @@
                                             <!-- TESTING: Show buttons for any upcoming match -->
                                             <% if (match.status === 'upcoming') { %>
                                                 <div class="border-l pl-2 ml-2">
+                                                    <!-- Debug info -->
+                                                    <div class="text-xs text-gray-400 mb-1" x-text="`Debug: showTeamButtons=${showTeamButtons}, winner='<%= match.winner || 'none' %>'`"></div>
+
                                                     <!-- Team Selection Buttons (shown initially or after reset) -->
                                                     <div x-show="showTeamButtons" class="flex space-x-1">
                                                         <button @click="setResult('<%= match.team_a %>')" :disabled="loading"
@@ -473,10 +480,15 @@
                                                     </div>
 
                                                     <!-- Reset Button (shown after setting result) -->
-                                                    <div x-show="!showTeamButtons">
+                                                    <div x-show="!showTeamButtons" class="flex space-x-1">
                                                         <button @click="resetResultLocal(<%= match.id %>)" :disabled="loading"
                                                                 class="text-orange-600 hover:text-orange-900 disabled:opacity-50 text-xs">
                                                             🔄 Reset Result
+                                                        </button>
+                                                        <!-- Also show team buttons for easy testing -->
+                                                        <button @click="showTeamButtons = true"
+                                                                class="text-gray-600 hover:text-gray-900 text-xs">
+                                                            ↩️ Back to Teams
                                                         </button>
                                                     </div>
                                                 </div>
