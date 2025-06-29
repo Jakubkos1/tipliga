@@ -4,14 +4,48 @@ class Prediction {
     static async create(predictionData) {
         try {
             const { userId, matchId, predictedWinner } = predictionData;
-            
-            // Use INSERT OR REPLACE to handle updates
-            const result = await db.run(`
-                INSERT OR REPLACE INTO predictions (user_id, match_id, predicted_winner, updated_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            `, [userId, matchId, predictedWinner]);
-            
-            return await this.findById(result.id);
+
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API - check if prediction exists first
+                const existingPredictions = await db.apiQuery('predictions', {
+                    filter: `user_id=eq.${userId}&match_id=eq.${matchId}`,
+                    select: '*'
+                });
+
+                if (existingPredictions.length > 0) {
+                    // Update existing prediction
+                    const updated = await db.apiQuery('predictions', {
+                        method: 'PATCH',
+                        filter: `user_id=eq.${userId}&match_id=eq.${matchId}`,
+                        body: {
+                            predicted_winner: predictedWinner,
+                            updated_at: new Date().toISOString()
+                        }
+                    });
+                    return updated[0];
+                } else {
+                    // Create new prediction
+                    const created = await db.apiQuery('predictions', {
+                        method: 'POST',
+                        body: {
+                            user_id: userId,
+                            match_id: matchId,
+                            predicted_winner: predictedWinner,
+                            updated_at: new Date().toISOString()
+                        }
+                    });
+                    return created[0];
+                }
+            } else {
+                // Using SQLite
+                const result = await db.run(`
+                    INSERT OR REPLACE INTO predictions (user_id, match_id, predicted_winner, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                `, [userId, matchId, predictedWinner]);
+
+                return await this.findById(result.id);
+            }
         } catch (error) {
             console.error('Error creating/updating prediction:', error);
             throw error;
@@ -20,8 +54,24 @@ class Prediction {
 
     static async findById(id) {
         try {
-            const prediction = await db.get('SELECT * FROM predictions WHERE id = ?', [id]);
-            return prediction;
+            // Handle null/undefined ID
+            if (!id) {
+                return null;
+            }
+
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                const predictions = await db.apiQuery('predictions', {
+                    filter: `id=eq.${id}`,
+                    select: '*'
+                });
+                return predictions[0] || null;
+            } else {
+                // Using SQLite
+                const prediction = await db.get('SELECT * FROM predictions WHERE id = ?', [id]);
+                return prediction;
+            }
         } catch (error) {
             console.error('Error finding prediction by ID:', error);
             throw error;
