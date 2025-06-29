@@ -155,6 +155,28 @@ class SupabaseAPI {
                     });
                     return results[0] || null;
                 }
+                else if (sql.includes('id = ?')) {
+                    const id = params[0];
+                    const results = await this.apiQuery('predictions', {
+                        filter: `id=eq.${id}`,
+                        select: '*'
+                    });
+                    return results[0] || null;
+                }
+            }
+
+            // Try to extract table name and basic WHERE clause for simple queries
+            const tableMatch = sql.match(/FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*\?/i);
+            if (tableMatch) {
+                const [, tableName, columnName] = tableMatch;
+                const value = params[0];
+                console.log(`🔄 Converting simple query: ${tableName}.${columnName} = ${value}`);
+
+                const results = await this.apiQuery(tableName, {
+                    filter: `${columnName}=eq.${value}`,
+                    select: '*'
+                });
+                return results[0] || null;
             }
 
             // Fallback for unsupported queries
