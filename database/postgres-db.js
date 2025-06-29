@@ -8,19 +8,29 @@ class PostgresDatabase {
 
     init() {
         // Use DATABASE_URL, POSTGRES_URL, or POSTGRES_URL_NON_POOLING from Supabase
-        const connectionString = process.env.DATABASE_URL ||
-                                process.env.POSTGRES_URL_NON_POOLING ||
-                                process.env.POSTGRES_URL;
+        let connectionString = process.env.DATABASE_URL ||
+                              process.env.POSTGRES_URL_NON_POOLING ||
+                              process.env.POSTGRES_URL;
+
+        // Force disable SSL in connection string for Vercel compatibility
+        if (connectionString && process.env.NODE_ENV === 'production') {
+            // Remove existing SSL parameters and add sslmode=disable
+            connectionString = connectionString.replace(/[?&]sslmode=[^&]*/g, '');
+            connectionString = connectionString.replace(/[?&]supa=[^&]*/g, '');
+            connectionString += connectionString.includes('?') ? '&sslmode=disable' : '?sslmode=disable';
+        }
 
         // Configure SSL for production (Vercel + Supabase)
-        const sslConfig = process.env.NODE_ENV === 'production' ? {
-            rejectUnauthorized: false,
-            require: true
-        } : false;
+        // Completely disable SSL for Vercel compatibility
+        const sslConfig = false;
 
         this.pool = new Pool({
             connectionString: connectionString,
-            ssl: sslConfig
+            ssl: sslConfig,
+            // Additional connection options for Vercel
+            max: 20,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 2000,
         });
 
         console.log('✅ Connected to PostgreSQL database');
