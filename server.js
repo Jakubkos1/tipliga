@@ -526,6 +526,15 @@ app.get('/admin', isAuthenticated, (req, res, next) => {
         const stats = await Prediction.getStats();
         const leaderboard = await User.getLeaderboard();
 
+        // DEBUG: Log user permissions
+        console.log('🔍 Admin panel access debug:');
+        console.log('  User:', req.user.username, 'ID:', req.user.id, 'Discord ID:', req.user.discord_id);
+        console.log('  Database role:', req.user.role);
+        console.log('  Is super admin (hardcoded):', checkIsSuperAdmin(req.user));
+        console.log('  Is admin (combined):', checkIsAdmin(req.user));
+        console.log('  Is moderator:', checkIsModerator(req.user));
+        console.log('  ADMIN_IDS env:', process.env.ADMIN_IDS);
+
         res.render('admin-simple', {
             user: req.user,
             matches,
