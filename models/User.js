@@ -126,20 +126,54 @@ class User {
 
     static async getLeaderboard() {
         try {
-            const leaderboard = await db.all(`
-                SELECT 
-                    u.username,
-                    u.avatar_url,
-                    COUNT(p.id) as total_predictions,
-                    SUM(p.points_earned) as total_points,
-                    COUNT(CASE WHEN p.points_earned > 0 THEN 1 END) as correct_predictions
-                FROM users u
-                LEFT JOIN predictions p ON u.id = p.user_id
-                GROUP BY u.id, u.username, u.avatar_url
-                HAVING total_predictions > 0
-                ORDER BY total_points DESC, correct_predictions DESC
-            `);
-            return leaderboard;
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API - calculate leaderboard in JavaScript
+                const users = await db.apiQuery('users', { select: '*' });
+                const predictions = await db.apiQuery('predictions', { select: '*' });
+
+                // Calculate stats for each user
+                const leaderboard = users.map(user => {
+                    const userPredictions = predictions.filter(p => p.user_id === user.id);
+                    const total_predictions = userPredictions.length;
+                    const total_points = userPredictions.reduce((sum, p) => sum + (p.points_earned || 0), 0);
+                    const correct_predictions = userPredictions.filter(p => p.points_earned > 0).length;
+
+                    return {
+                        username: user.username,
+                        avatar_url: user.avatar_url,
+                        total_predictions,
+                        total_points,
+                        correct_predictions
+                    };
+                })
+                .filter(user => user.total_predictions > 0) // Only users with predictions
+                .sort((a, b) => {
+                    // Sort by total_points DESC, then correct_predictions DESC
+                    if (b.total_points !== a.total_points) {
+                        return b.total_points - a.total_points;
+                    }
+                    return b.correct_predictions - a.correct_predictions;
+                });
+
+                return leaderboard;
+            } else {
+                // Using SQLite
+                const leaderboard = await db.all(`
+                    SELECT
+                        u.username,
+                        u.avatar_url,
+                        COUNT(p.id) as total_predictions,
+                        SUM(p.points_earned) as total_points,
+                        COUNT(CASE WHEN p.points_earned > 0 THEN 1 END) as correct_predictions
+                    FROM users u
+                    LEFT JOIN predictions p ON u.id = p.user_id
+                    GROUP BY u.id, u.username, u.avatar_url
+                    HAVING total_predictions > 0
+                    ORDER BY total_points DESC, correct_predictions DESC
+                `);
+                return leaderboard;
+            }
         } catch (error) {
             console.error('Error getting leaderboard:', error);
             throw error;

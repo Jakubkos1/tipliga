@@ -74,8 +74,19 @@ class Match {
 
     static async findById(id) {
         try {
-            const match = await db.get('SELECT * FROM matches WHERE id = ?', [id]);
-            return match;
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                const matches = await db.apiQuery('matches', {
+                    filter: `id=eq.${id}`,
+                    select: '*'
+                });
+                return matches[0] || null;
+            } else {
+                // Using SQLite
+                const match = await db.get('SELECT * FROM matches WHERE id = ?', [id]);
+                return match;
+            }
         } catch (error) {
             console.error('Error finding match by ID:', error);
             throw error;
