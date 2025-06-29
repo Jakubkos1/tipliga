@@ -425,13 +425,31 @@ app.post('/admin/users/:id/reset-stats', isAuthenticated, isAdmin, async (req, r
     try {
         const { id } = req.params;
 
+        // Get the target user to check their role (unless it's self-reset)
+        let targetUser = null;
+        if (parseInt(id) !== req.user.id) {
+            targetUser = await User.findById(id);
+            if (!targetUser) {
+                return res.redirect('/admin/users?error=User not found');
+            }
+
+            // Only super admins can reset admin stats (except their own)
+            const isSuperAdminUser = checkIsSuperAdmin(req.user);
+            const targetIsAdmin = targetUser.role === 'admin' || checkIsSuperAdmin(targetUser);
+
+            if (!isSuperAdminUser && targetIsAdmin) {
+                return res.redirect('/admin/users?error=Only super admins can reset admin statistics');
+            }
+        }
+
         await User.resetUserStats(id);
 
         if (parseInt(id) === req.user.id) {
             console.log(`✅ Admin ${req.user.username} reset their own stats`);
             res.redirect('/admin/users?success=Your statistics have been reset successfully');
         } else {
-            console.log(`✅ Admin ${req.user.username} reset stats for user ${id}`);
+            const isSuperAdminUser = checkIsSuperAdmin(req.user);
+            console.log(`✅ ${isSuperAdminUser ? 'Super Admin' : 'Admin'} ${req.user.username} reset stats for user ${id} (role: ${targetUser.role})`);
             res.redirect('/admin/users?success=User statistics have been reset successfully');
         }
     } catch (error) {
@@ -446,16 +464,30 @@ app.post('/admin/users/:id/delete', isAuthenticated, isAdmin, async (req, res) =
 
         // Prevent admin from deleting themselves
         if (parseInt(id) === req.user.id) {
-            return res.redirect('/admin/users?error=Nemůžete smazat sám sebe');
+            return res.redirect('/admin/users?error=You cannot delete yourself');
+        }
+
+        // Get the target user to check their role
+        const targetUser = await User.findById(id);
+        if (!targetUser) {
+            return res.redirect('/admin/users?error=User not found');
+        }
+
+        // Only super admins can delete admin accounts
+        const isSuperAdminUser = checkIsSuperAdmin(req.user);
+        const targetIsAdmin = targetUser.role === 'admin' || checkIsSuperAdmin(targetUser);
+
+        if (!isSuperAdminUser && targetIsAdmin) {
+            return res.redirect('/admin/users?error=Only super admins can delete admin accounts');
         }
 
         await User.deleteUser(id);
-        console.log(`✅ Admin ${req.user.username} deleted user ${id}`);
+        console.log(`✅ ${isSuperAdminUser ? 'Super Admin' : 'Admin'} ${req.user.username} deleted user ${id} (role: ${targetUser.role})`);
 
-        res.redirect('/admin/users?success=Uživatel byl úspěšně smazán');
+        res.redirect('/admin/users?success=User was successfully deleted');
     } catch (error) {
         console.error('Error deleting user:', error);
-        res.redirect('/admin/users?error=Chyba při mazání uživatele');
+        res.redirect('/admin/users?error=Error deleting user');
     }
 });
 
