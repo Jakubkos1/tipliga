@@ -299,6 +299,10 @@ class Match {
                     }
                 });
                 console.log('✅ Supabase soft delete result:', result);
+
+                // Verify the delete worked by checking the match
+                await this.debugMatchState(matchId);
+
             } else {
                 // Using SQLite
                 console.log('🔄 Using SQLite for soft delete');
@@ -313,6 +317,33 @@ class Match {
         } catch (error) {
             console.error('❌ Error soft deleting match:', error);
             throw error;
+        }
+    }
+
+    static async debugMatchState(matchId) {
+        try {
+            console.log(`🔍 Checking match ${matchId} state after delete...`);
+
+            // Get match without any filters to see actual state
+            const allMatches = await db.apiQuery('matches', {
+                filter: `id=eq.${matchId}`,
+                select: '*'
+            });
+
+            if (allMatches.length > 0) {
+                const match = allMatches[0];
+                console.log('📊 Match state:', {
+                    id: match.id,
+                    teams: `${match.team_a} vs ${match.team_b}`,
+                    deleted: match.deleted,
+                    deleted_at: match.deleted_at,
+                    hasDeletedColumn: 'deleted' in match
+                });
+            } else {
+                console.log('❌ Match not found in database');
+            }
+        } catch (error) {
+            console.error('❌ Error checking match state:', error);
         }
     }
 

@@ -222,7 +222,8 @@ class SupabaseAPI {
     // Match methods - proper Supabase authentication
     async getAllMatches() {
         try {
-            const url = `${this.baseUrl}/rest/v1/matches?deleted=eq.false`;
+            // First try with deleted filter, fallback if column doesn't exist
+            let url = `${this.baseUrl}/rest/v1/matches?deleted=eq.false&order=match_time.asc`;
             console.log('🔍 API call to:', url);
             console.log('🔑 Using API key:', this.apiKey ? 'Present' : 'Missing');
 
@@ -240,11 +241,33 @@ class SupabaseAPI {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('❌ API Error:', errorText);
+
+                // If deleted column doesn't exist, try without filter
+                if (errorText.includes('column "deleted" does not exist')) {
+                    console.log('⚠️ Deleted column does not exist, fetching all matches');
+                    url = `${this.baseUrl}/rest/v1/matches?order=match_time.asc`;
+                    const fallbackResponse = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': this.apiKey,
+                            'Authorization': `Bearer ${this.apiKey}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (fallbackResponse.ok) {
+                        const data = await fallbackResponse.json();
+                        console.log('✅ Got matches (no deleted filter):', data.length);
+                        return data;
+                    }
+                }
+
                 throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
 
             const data = await response.json();
-            console.log('✅ Got matches:', data.length);
+            console.log('✅ Got matches (with deleted filter):', data.length);
+            console.log('🔍 Sample match data:', data[0]);
             return data;
         } catch (error) {
             console.error('❌ getAllMatches error:', error);

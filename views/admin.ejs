@@ -583,20 +583,13 @@
                 const result = await response.json();
                 if (result.success) {
                     this.closeModals();
-                    this.showSuccess('Zápas byl úspěšně smazán!');
+                    this.showSuccess('Match deleted successfully!');
 
-                    // Remove the match row from the table with animation
-                    const matchRow = document.querySelector(`[data-match-id="${this.deleteData.id}"]`);
-                    if (matchRow) {
-                        matchRow.style.transition = 'all 0.3s ease-out';
-                        matchRow.style.opacity = '0';
-                        matchRow.style.transform = 'translateX(-100%)';
-                        setTimeout(() => {
-                            matchRow.remove();
-                            // Update stats if needed
-                            this.updateStatsAfterDelete();
-                        }, 300);
-                    }
+                    // Force page refresh to ensure match is removed from all lists
+                    console.log('🔄 Refreshing page to update match list...');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     this.showError('Chyba: ' + result.error);
                 }
