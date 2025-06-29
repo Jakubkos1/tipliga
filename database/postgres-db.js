@@ -7,11 +7,20 @@ class PostgresDatabase {
     }
 
     init() {
-        // Use DATABASE_URL or POSTGRES_URL from Supabase
-        const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+        // Use DATABASE_URL, POSTGRES_URL, or POSTGRES_URL_NON_POOLING from Supabase
+        const connectionString = process.env.DATABASE_URL ||
+                                process.env.POSTGRES_URL_NON_POOLING ||
+                                process.env.POSTGRES_URL;
+
+        // Configure SSL for production (Vercel + Supabase)
+        const sslConfig = process.env.NODE_ENV === 'production' ? {
+            rejectUnauthorized: false,
+            require: true
+        } : false;
+
         this.pool = new Pool({
             connectionString: connectionString,
-            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+            ssl: sslConfig
         });
 
         console.log('✅ Connected to PostgreSQL database');
