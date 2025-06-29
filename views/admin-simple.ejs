@@ -187,7 +187,21 @@
                                             <% } %>
 
                                             <!-- Set Result Buttons and Reset -->
-                                            <% if (match.status === 'upcoming' || match.status === 'finished') { %>
+                                            <%
+                                                const now = new Date();
+                                                const matchDate = new Date(match.match_time);
+
+                                                // Apply Prague timezone correction and 30-minute evaluation window
+                                                const pragueOffset = 2 * 60 * 60 * 1000; // 2 hours
+                                                const adjustedMatchTime = matchDate.getTime() - pragueOffset;
+                                                const evaluationTime = adjustedMatchTime + (30 * 60 * 1000); // +30 minutes
+                                                const canEvaluateTime = now >= new Date(evaluationTime);
+
+                                                const canEvaluate = !match.winner && match.status !== 'finished' && canEvaluateTime;
+                                                const canReset = match.winner && (match.status === 'finished' || match.status === 'upcoming');
+                                                const isLocked = match.status !== 'upcoming' || (matchDate - now) <= (60 * 60 * 1000);
+                                            %>
+                                            <% if (canEvaluate || canReset) { %>
                                                 <div class="border-l pl-2 ml-2 flex space-x-1">
                                                     <% if (!match.winner) { %>
                                                         <!-- Team Selection Buttons -->
@@ -210,6 +224,16 @@
                                                             🔄 Reset Result
                                                         </button>
                                                     <% } %>
+                                                </div>
+                                            <% } else if (!match.winner && match.status === 'upcoming') { %>
+                                                <div class="border-l pl-2 ml-2">
+                                                    <span class="text-xs text-gray-500">
+                                                        <% if (isLocked) { %>
+                                                            🔒 Betting closed - Evaluation available 30min after match start
+                                                        <% } else { %>
+                                                            ⏰ Evaluation available 30min after match start
+                                                        <% } %>
+                                                    </span>
                                                 </div>
                                             <% } %>
                                         </div>

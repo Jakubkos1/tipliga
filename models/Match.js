@@ -329,18 +329,10 @@ class Match {
     }
 
     static canEvaluateMatch(matchTime, status) {
-        // 🚫 TEMPORARILY DISABLED TIME RESTRICTION FOR TESTING
-        console.log('⏸️ Match time restriction temporarily disabled for testing');
-        console.log('🔄 Can evaluate any upcoming match regardless of time');
-
         // Can evaluate if match has started (not just finished)
         if (status === 'finished') return true; // Already evaluated
         if (status !== 'upcoming') return false; // Invalid status
 
-        // TEMPORARILY ALLOW EVALUATION AT ANY TIME FOR TESTING
-        return true;
-
-        /* COMMENTED OUT FOR TESTING - UNCOMMENT TO RE-ENABLE TIME RESTRICTION:
         // Apply the same timezone correction as in isMatchLocked
         const now = new Date();
         const matchDate = new Date(matchTime);
@@ -350,16 +342,20 @@ class Match {
         const adjustedMatchTime = matchDate.getTime() - pragueOffset;
         const adjustedMatchDate = new Date(adjustedMatchTime);
 
+        // Add 30 minutes to match start time for evaluation window
+        const evaluationTime = adjustedMatchTime + (30 * 60 * 1000); // 30 minutes after match start
+        const evaluationDate = new Date(evaluationTime);
+
         console.log('🔍 Match Evaluation Timezone Debug:');
         console.log('  Server time (UTC):', now.toISOString());
         console.log('  Match time (input):', matchTime);
         console.log('  Match time (original):', matchDate.toISOString());
         console.log('  Match time (adjusted -2h):', adjustedMatchDate.toISOString());
-        console.log('  Can evaluate:', now >= adjustedMatchDate);
+        console.log('  Evaluation time (+30min):', evaluationDate.toISOString());
+        console.log('  Can evaluate:', now >= evaluationDate);
 
-        // Can evaluate if match has started (current time >= adjusted match time)
-        return now >= adjustedMatchDate;
-        */
+        // Can evaluate if 30 minutes have passed since match start
+        return now >= evaluationDate;
     }
 
     static getMatchStatus(matchTime, currentStatus) {
