@@ -2,7 +2,10 @@
 class SupabaseAPI {
     constructor() {
         this.baseUrl = process.env.SUPABASE_URL;
-        this.apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        // Try different possible API key environment variables
+        this.apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+                     process.env.SUPABASE_ANON_KEY ||
+                     process.env.SUPABASE_KEY;
         this.init();
     }
 
@@ -147,22 +150,28 @@ class SupabaseAPI {
         return result[0];
     }
 
-    // Match methods - simplified to match working API call
+    // Match methods - proper Supabase authentication
     async getAllMatches() {
         try {
-            const url = `${this.baseUrl}/rest/v1/matches?apikey=${this.apiKey}`;
-            console.log('🔍 Direct API call to:', url);
+            const url = `${this.baseUrl}/rest/v1/matches`;
+            console.log('🔍 API call to:', url);
+            console.log('🔑 Using API key:', this.apiKey ? 'Present' : 'Missing');
 
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'apikey': this.apiKey,
-                    'Authorization': `Bearer ${this.apiKey}`
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
+            console.log('📡 Response status:', response.status);
+
             if (!response.ok) {
-                throw new Error(`API error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error('❌ API Error:', errorText);
+                throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
 
             const data = await response.json();
@@ -176,19 +185,24 @@ class SupabaseAPI {
 
     async getUpcomingMatches() {
         try {
-            const url = `${this.baseUrl}/rest/v1/matches?status=eq.upcoming&apikey=${this.apiKey}`;
-            console.log('🔍 Direct API call to:', url);
+            const url = `${this.baseUrl}/rest/v1/matches?status=eq.upcoming`;
+            console.log('🔍 API call to:', url);
 
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'apikey': this.apiKey,
-                    'Authorization': `Bearer ${this.apiKey}`
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
+            console.log('📡 Response status:', response.status);
+
             if (!response.ok) {
-                throw new Error(`API error: ${response.status} ${response.statusText}`);
+                const errorText = await response.text();
+                console.error('❌ API Error:', errorText);
+                throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
             }
 
             const data = await response.json();
