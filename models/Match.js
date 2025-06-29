@@ -203,6 +203,62 @@ class Match {
         }
     }
 
+    static async resetResult(matchId) {
+        try {
+            console.log(`🔄 Resetting result for match ${matchId}...`);
+
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                // Reset match to upcoming status with no winner
+                await db.apiQuery('matches', {
+                    method: 'PATCH',
+                    filter: `id=eq.${matchId}`,
+                    body: {
+                        winner: null,
+                        status: 'upcoming',
+                        updated_at: new Date().toISOString()
+                    }
+                });
+
+                // Reset all points for predictions on this match
+                try {
+                    await db.apiQuery('predictions', {
+                        method: 'PATCH',
+                        filter: `match_id=eq.${matchId}`,
+                        body: {
+                            points_earned: null
+                        }
+                    });
+                    console.log(`✅ Reset points for all predictions on match ${matchId}`);
+                } catch (columnError) {
+                    if (columnError.message.includes('points_earned')) {
+                        console.log(`⚠️ Points column missing - skipping points reset for match ${matchId}`);
+                    } else {
+                        throw columnError;
+                    }
+                }
+            } else {
+                // Using SQLite
+                await db.run(
+                    'UPDATE matches SET winner = NULL, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    ['upcoming', matchId]
+                );
+
+                await db.run(
+                    'UPDATE predictions SET points_earned = NULL WHERE match_id = ?',
+                    [matchId]
+                );
+            }
+
+            console.log(`✅ Match ${matchId} result reset successfully`);
+            return await this.findById(matchId);
+        } catch (error) {
+            console.error('Error resetting match result:', error);
+            throw error;
+        }
+    }
+
     // Helper function to get current time in Prague timezone
     static getPragueTime() {
         // Get current time and convert to Prague timezone

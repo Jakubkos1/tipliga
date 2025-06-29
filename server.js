@@ -616,6 +616,29 @@ app.post('/admin/matches/:id/result', isAuthenticated, (req, res, next) => {
     }
 });
 
+// Reset match result route
+app.post('/admin/matches/:id/reset', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🔄 Reset result request received for match ID: ${id} by user: ${req.user?.username}`);
+
+        // Check if match exists
+        const match = await Match.findById(id);
+        if (!match) {
+            return res.redirect('/admin?error=Match not found');
+        }
+
+        // Reset the match result
+        const resetMatch = await Match.resetResult(id);
+        console.log(`✅ Admin ${req.user.username} reset result for match: ${resetMatch.team_a} vs ${resetMatch.team_b} (ID: ${id})`);
+
+        res.redirect('/admin?success=Match result reset successfully! You can now set a new winner.');
+    } catch (error) {
+        console.error('Error resetting match result:', error);
+        res.redirect('/admin?error=Error resetting match result');
+    }
+});
+
 app.post('/admin/matches/:id/edit', isAuthenticated, (req, res, next) => {
     if (checkCanManageMatches(req.user)) {
         next();

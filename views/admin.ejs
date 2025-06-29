@@ -262,6 +262,37 @@
                                             this.loading = false;
                                         }
                                     },
+
+                                    async resetResult() {
+                                        if (!confirm('Are you sure you want to reset this match result? This will remove the winner and reset all points for this match.')) {
+                                            return;
+                                        }
+
+                                        this.loading = true;
+                                        try {
+                                            const response = await fetch(`/admin/matches/<%= match.id %>/reset`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' }
+                                            });
+
+                                            const result = await response.json();
+                                            if (result.success) {
+                                                this.$dispatch('show-success', 'Match result reset successfully! You can now set a new winner.');
+
+                                                // Refresh the page to update the action buttons properly
+                                                setTimeout(() => {
+                                                    window.location.reload();
+                                                }, 1500);
+                                            } else {
+                                                this.$dispatch('show-error', 'Error: ' + result.error);
+                                            }
+                                        } catch (error) {
+                                            this.$dispatch('show-error', 'Error resetting match result');
+                                        } finally {
+                                            this.loading = false;
+                                        }
+                                    },
+
                                     editMatch(id, teamA, teamB, matchTime) {
                                         // Set edit modal data
                                         this.$dispatch('open-edit-modal', {
@@ -403,6 +434,14 @@
                                                     <button @click="setResult('<%= match.team_b %>')" :disabled="loading"
                                                             class="text-red-600 hover:text-red-900 disabled:opacity-50 text-xs">
                                                         🏆 <%= match.team_b %>
+                                                    </button>
+                                                </div>
+                                            <% } else if (match.winner) { %>
+                                                <!-- Reset Result Button for finished matches -->
+                                                <div class="border-l pl-2 ml-2">
+                                                    <button @click="resetResult()" :disabled="loading"
+                                                            class="text-orange-600 hover:text-orange-900 disabled:opacity-50 text-xs">
+                                                        🔄 Reset Result
                                                     </button>
                                                 </div>
                                             <% } else if (!match.winner && now < matchDate) { %>
