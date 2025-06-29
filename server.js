@@ -272,6 +272,28 @@ app.get('/logout', (req, res) => {
     });
 });
 
+// User prediction history page
+app.get('/my-predictions', isAuthenticated, async (req, res) => {
+    try {
+        const predictions = await Prediction.getUserPredictions(req.user.id);
+
+        // Sort predictions by match time (newest first)
+        const sortedPredictions = predictions.sort((a, b) =>
+            new Date(b.match_time) - new Date(a.match_time)
+        );
+
+        res.render('my-predictions', {
+            user: req.user,
+            predictions: sortedPredictions,
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user)
+        });
+    } catch (error) {
+        console.error('Error loading user predictions:', error);
+        res.status(500).render('error', { message: 'Error loading your predictions' });
+    }
+});
+
 // Prediction routes
 app.post('/predict', isAuthenticated, async (req, res) => {
     try {
