@@ -122,7 +122,7 @@ class SupabaseAPI {
 
     async all(table, filter = '') {
         const options = { select: '*' };
-        if (filter && filter.trim()) {
+        if (filter && typeof filter === 'string' && filter.trim()) {
             options.filter = filter;
         }
         return await this.apiQuery(table, options);
