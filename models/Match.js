@@ -245,21 +245,39 @@ class Match {
         if (status === 'finished') return true; // Already evaluated
         if (status !== 'upcoming') return false; // Invalid status
 
+        // Apply the same timezone correction as in isMatchLocked
         const now = new Date();
         const matchDate = new Date(matchTime);
 
-        // Can evaluate if match has started (current time >= match time)
-        return now >= matchDate;
+        // Apply 2-hour offset correction for Prague timezone
+        const pragueOffset = 2 * 60 * 60 * 1000; // 2 hours in milliseconds (summer time)
+        const adjustedMatchTime = matchDate.getTime() - pragueOffset;
+        const adjustedMatchDate = new Date(adjustedMatchTime);
+
+        console.log('🔍 Match Evaluation Timezone Debug:');
+        console.log('  Server time (UTC):', now.toISOString());
+        console.log('  Match time (input):', matchTime);
+        console.log('  Match time (original):', matchDate.toISOString());
+        console.log('  Match time (adjusted -2h):', adjustedMatchDate.toISOString());
+        console.log('  Can evaluate:', now >= adjustedMatchDate);
+
+        // Can evaluate if match has started (current time >= adjusted match time)
+        return now >= adjustedMatchDate;
     }
 
     static getMatchStatus(matchTime, currentStatus) {
         const now = new Date();
         const matchDate = new Date(matchTime);
-        const oneHourBefore = matchDate.getTime() - (60 * 60 * 1000);
+
+        // Apply 2-hour offset correction for Prague timezone
+        const pragueOffset = 2 * 60 * 60 * 1000; // 2 hours in milliseconds (summer time)
+        const adjustedMatchTime = matchDate.getTime() - pragueOffset;
+        const adjustedMatchDate = new Date(adjustedMatchTime);
+        const oneHourBefore = adjustedMatchDate.getTime() - (60 * 60 * 1000);
 
         if (currentStatus === 'finished') return 'finished';
 
-        if (now.getTime() >= matchDate.getTime()) {
+        if (now.getTime() >= adjustedMatchDate.getTime()) {
             return 'live'; // Match has started
         } else if (now.getTime() >= oneHourBefore) {
             return 'locked'; // Betting closed
