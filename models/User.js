@@ -246,7 +246,7 @@ class User {
     static async updateUserRole(userId, role) {
         try {
             // Validate role
-            const validRoles = ['user', 'moderator'];
+            const validRoles = ['user', 'moderator', 'admin'];
             if (!validRoles.includes(role)) {
                 throw new Error('Invalid role');
             }

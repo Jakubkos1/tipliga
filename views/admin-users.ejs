@@ -101,6 +101,7 @@
                                                         class="text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                                     <option value="user" <%= userItem.role === 'user' ? 'selected' : '' %>>User</option>
                                                     <option value="moderator" <%= userItem.role === 'moderator' ? 'selected' : '' %>>Moderator</option>
+                                                    <option value="admin" <%= userItem.role === 'admin' ? 'selected' : '' %>>Admin</option>
                                                 </select>
                                             </form>
                                         <% } %>
