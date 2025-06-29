@@ -594,28 +594,18 @@ app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
 
         console.log(`🔍 Found match to delete: ${match.team_a} vs ${match.team_b}`);
 
-        // Try soft delete first, fallback to hard delete
-        console.log(`🔄 Calling Match.softDelete(${id})...`);
+        // Skip Match.softDelete() for now and use direct API call
+        console.log(`🔄 Using direct Supabase API DELETE for match ${id}...`);
         try {
-            const deleteResult = await Match.softDelete(id);
-            console.log(`✅ Match.softDelete returned:`, deleteResult);
+            const directResult = await db.apiQuery('matches', {
+                method: 'DELETE',
+                filter: `id=eq.${id}`
+            });
+            console.log(`✅ Direct delete result:`, directResult);
             console.log(`✅ Admin ${req.user.username} deleted match: ${match.team_a} vs ${match.team_b} (ID: ${id})`);
-        } catch (deleteError) {
-            console.error(`❌ Match.softDelete failed, trying direct API call:`, deleteError);
-
-            // Direct API call as fallback
-            console.log(`🔄 Attempting direct Supabase DELETE...`);
-            try {
-                const directResult = await db.apiQuery('matches', {
-                    method: 'DELETE',
-                    filter: `id=eq.${id}`
-                });
-                console.log(`✅ Direct delete result:`, directResult);
-                console.log(`✅ Admin ${req.user.username} hard deleted match: ${match.team_a} vs ${match.team_b} (ID: ${id})`);
-            } catch (directError) {
-                console.error(`❌ Direct delete also failed:`, directError);
-                throw directError;
-            }
+        } catch (directError) {
+            console.error(`❌ Direct delete failed:`, directError);
+            throw directError;
         }
 
         res.json({
