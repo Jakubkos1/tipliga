@@ -278,25 +278,29 @@ app.get('/api/match/:id/stats', async (req, res) => {
     try {
         const { id } = req.params;
 
-        const match = await db.get(`
-            SELECT
-                m.*,
-                COUNT(p.id) as total_predictions,
-                COUNT(CASE WHEN p.predicted_winner = m.team_a THEN 1 END) as votes_team_a,
-                COUNT(CASE WHEN p.predicted_winner = m.team_b THEN 1 END) as votes_team_b
-            FROM matches m
-            LEFT JOIN predictions p ON m.id = p.match_id
-            WHERE m.id = ?
-            GROUP BY m.id
-        `, [id]);
-
+        // Get match details
+        const match = await Match.findById(id);
         if (!match) {
             return res.status(404).json({ success: false, error: 'Match not found' });
         }
 
-        const totalPredictions = parseInt(match.total_predictions || 0);
-        const votesTeamA = parseInt(match.votes_team_a || 0);
-        const votesTeamB = parseInt(match.votes_team_b || 0);
+        // Get predictions for this match
+        let predictions = [];
+        if (db.apiQuery) {
+            // Using Supabase API
+            predictions = await db.apiQuery('predictions', {
+                filter: `match_id=eq.${id}`,
+                select: '*'
+            });
+        } else {
+            // Using SQLite
+            predictions = await db.all('SELECT * FROM predictions WHERE match_id = ?', [id]);
+        }
+
+        // Calculate stats
+        const totalPredictions = predictions.length;
+        const votesTeamA = predictions.filter(p => p.predicted_winner === match.team_a).length;
+        const votesTeamB = predictions.filter(p => p.predicted_winner === match.team_b).length;
 
         res.json({
             success: true,
