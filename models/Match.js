@@ -172,6 +172,7 @@ class Match {
                 // Using Supabase API
                 // First check if points_earned column exists by trying to update
                 try {
+                    // Award 1 point to correct predictions
                     await db.apiQuery('predictions', {
                         method: 'PATCH',
                         filter: `match_id=eq.${matchId}&predicted_winner=eq.${winner}`,
@@ -180,6 +181,16 @@ class Match {
                         }
                     });
                     console.log(`✅ Awarded 1 point to correct predictions for match ${matchId}`);
+
+                    // Award 0 points to wrong predictions
+                    await db.apiQuery('predictions', {
+                        method: 'PATCH',
+                        filter: `match_id=eq.${matchId}&predicted_winner=neq.${winner}`,
+                        body: {
+                            points_earned: 0
+                        }
+                    });
+                    console.log(`✅ Awarded 0 points to wrong predictions for match ${matchId}`);
                 } catch (columnError) {
                     if (columnError.message.includes('points_earned')) {
                         console.log(`⚠️ Points column missing - skipping points award for match ${matchId}. Please add 'points_earned' column to predictions table.`);
@@ -191,11 +202,19 @@ class Match {
                 }
             } else {
                 // Using SQLite
+                // Award 1 point to correct predictions
                 await db.run(
                     'UPDATE predictions SET points_earned = 1 WHERE match_id = ? AND predicted_winner = ?',
                     [matchId, winner]
                 );
                 console.log(`✅ Awarded 1 point to correct predictions for match ${matchId}`);
+
+                // Award 0 points to wrong predictions
+                await db.run(
+                    'UPDATE predictions SET points_earned = 0 WHERE match_id = ? AND predicted_winner != ?',
+                    [matchId, winner]
+                );
+                console.log(`✅ Awarded 0 points to wrong predictions for match ${matchId}`);
             }
         } catch (error) {
             console.error('Error awarding points:', error);
