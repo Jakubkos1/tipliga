@@ -191,12 +191,40 @@ class Match {
 
     static isMatchLocked(matchTime, status) {
         if (status !== 'upcoming') return true;
-        
+
         const now = new Date();
         const matchDate = new Date(matchTime);
         const lockTime = 60 * 60 * 1000; // 1 hour before match
-        
+
         return (matchDate - now) <= lockTime;
+    }
+
+    static canEvaluateMatch(matchTime, status) {
+        // Can evaluate if match has started (not just finished)
+        if (status === 'finished') return true; // Already evaluated
+        if (status !== 'upcoming') return false; // Invalid status
+
+        const now = new Date();
+        const matchDate = new Date(matchTime);
+
+        // Can evaluate if match has started (current time >= match time)
+        return now >= matchDate;
+    }
+
+    static getMatchStatus(matchTime, currentStatus) {
+        const now = new Date();
+        const matchDate = new Date(matchTime);
+        const oneHourBefore = matchDate.getTime() - (60 * 60 * 1000);
+
+        if (currentStatus === 'finished') return 'finished';
+
+        if (now.getTime() >= matchDate.getTime()) {
+            return 'live'; // Match has started
+        } else if (now.getTime() >= oneHourBefore) {
+            return 'locked'; // Betting closed
+        } else {
+            return 'upcoming'; // Still accepting bets
+        }
     }
 
     static async update(matchId, matchData) {

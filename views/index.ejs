@@ -168,13 +168,32 @@
                                 </div>
 
                                 <!-- Betting Buttons -->
+                                <%
+                                    const now = new Date();
+                                    const matchDate = new Date(match.match_time);
+                                    const isLive = now.getTime() >= matchDate.getTime();
+                                %>
                                 <% if (match.is_locked) { %>
                                     <div class="text-center">
-                                        <p class="text-red-600 font-medium mb-2">Tipování uzavřeno</p>
+                                        <% if (match.status === 'finished') { %>
+                                            <p class="text-green-600 font-medium mb-2">🏁 Match Finished</p>
+                                            <% if (match.winner) { %>
+                                                <p class="text-sm text-gray-600 mb-2">
+                                                    Winner: <span class="font-medium text-green-600"><%= match.winner %></span>
+                                                </p>
+                                            <% } %>
+                                        <% } else if (isLive) { %>
+                                            <p class="text-red-600 font-medium mb-2">🔴 Match Live - Betting Closed</p>
+                                        <% } else { %>
+                                            <p class="text-orange-600 font-medium mb-2">🔒 Betting Closed (1 hour before match)</p>
+                                        <% } %>
+
                                         <% if (userPredictions[match.id]) { %>
                                             <p class="text-sm text-gray-600">
-                                                Váš tip: <span class="font-medium"><%= userPredictions[match.id] %></span>
+                                                Your prediction: <span class="font-medium"><%= userPredictions[match.id] %></span>
                                             </p>
+                                        <% } else { %>
+                                            <p class="text-sm text-gray-600">No prediction made</p>
                                         <% } %>
                                     </div>
                                 <% } else { %>

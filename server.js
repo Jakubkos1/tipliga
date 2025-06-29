@@ -488,13 +488,29 @@ app.post('/admin/matches/:id/result', isAuthenticated, (req, res, next) => {
             return res.redirect('/admin?error=Winner is required');
         }
 
-        const match = await Match.updateResult(id, winner);
-        console.log(`✅ Admin ${req.user.username} set result: ${match.team_a} vs ${match.team_b} - Winner: ${winner}`);
+        // Check if match exists and can be evaluated
+        const match = await Match.findById(id);
+        if (!match) {
+            return res.redirect('/admin?error=Match not found');
+        }
 
-        res.redirect('/admin?success=Výsledek byl úspěšně nastaven!');
+        // Check if match can be evaluated (has started)
+        if (!Match.canEvaluateMatch(match.match_time, match.status)) {
+            return res.redirect('/admin?error=Match cannot be evaluated yet - wait until match has started');
+        }
+
+        // Validate winner is one of the teams
+        if (winner !== match.team_a && winner !== match.team_b) {
+            return res.redirect('/admin?error=Winner must be one of the competing teams');
+        }
+
+        const updatedMatch = await Match.updateResult(id, winner);
+        console.log(`✅ Admin ${req.user.username} set result: ${updatedMatch.team_a} vs ${updatedMatch.team_b} - Winner: ${winner}`);
+
+        res.redirect('/admin?success=Match result set successfully! Points awarded to correct predictions.');
     } catch (error) {
         console.error('Error updating match result:', error);
-        res.redirect('/admin?error=Chyba při nastavování výsledku');
+        res.redirect('/admin?error=Error setting match result');
     }
 });
 

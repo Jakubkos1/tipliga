@@ -331,11 +331,29 @@
                                         <%= new Date(match.match_time).toLocaleString('cs-CZ') %>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap" data-field="status">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                   <%= match.status === 'upcoming' ? 'bg-yellow-100 text-yellow-800' :
-                                                       match.status === 'finished' ? 'bg-green-100 text-green-800' :
-                                                       'bg-gray-100 text-gray-800' %>">
-                                            <%= match.status %>
+                                        <%
+                                            const now = new Date();
+                                            const matchDate = new Date(match.match_time);
+                                            const oneHourBefore = matchDate.getTime() - (60 * 60 * 1000);
+                                            let displayStatus = match.status;
+                                            let statusClass = 'bg-gray-100 text-gray-800';
+
+                                            if (match.status === 'finished') {
+                                                displayStatus = 'finished';
+                                                statusClass = 'bg-green-100 text-green-800';
+                                            } else if (now.getTime() >= matchDate.getTime()) {
+                                                displayStatus = 'live';
+                                                statusClass = 'bg-red-100 text-red-800';
+                                            } else if (now.getTime() >= oneHourBefore) {
+                                                displayStatus = 'locked';
+                                                statusClass = 'bg-orange-100 text-orange-800';
+                                            } else {
+                                                displayStatus = 'upcoming';
+                                                statusClass = 'bg-yellow-100 text-yellow-800';
+                                            }
+                                        %>
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= statusClass %>">
+                                            <%= displayStatus %>
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -370,7 +388,13 @@
                                             </button>
 
                                             <!-- Set Result Buttons -->
-                                            <% if (!match.winner && match.status === 'upcoming') { %>
+                                            <%
+                                                const now = new Date();
+                                                const matchDate = new Date(match.match_time);
+                                                const canEvaluate = !match.winner && match.status !== 'finished' && now >= matchDate;
+                                                const isLocked = match.status !== 'upcoming' || (matchDate - now) <= (60 * 60 * 1000);
+                                            %>
+                                            <% if (canEvaluate) { %>
                                                 <div class="border-l pl-2 ml-2 flex space-x-1">
                                                     <button @click="setResult('<%= match.team_a %>')" :disabled="loading"
                                                             class="text-blue-600 hover:text-blue-900 disabled:opacity-50 text-xs">
@@ -380,6 +404,16 @@
                                                             class="text-red-600 hover:text-red-900 disabled:opacity-50 text-xs">
                                                         🏆 <%= match.team_b %>
                                                     </button>
+                                                </div>
+                                            <% } else if (!match.winner && now < matchDate) { %>
+                                                <div class="border-l pl-2 ml-2">
+                                                    <span class="text-xs text-gray-500">
+                                                        <% if (isLocked) { %>
+                                                            🔒 Betting closed - Match starts at <%= matchDate.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) %>
+                                                        <% } else { %>
+                                                            ⏰ Evaluation available after match starts
+                                                        <% } %>
+                                                    </span>
                                                 </div>
                                             <% } %>
                                         </div>
