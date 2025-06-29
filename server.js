@@ -584,10 +584,20 @@ app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
 
-        await Match.delete(id);
-        console.log(`✅ Admin ${req.user.username} deleted match ID: ${id}`);
+        // Check if match exists and is not already deleted
+        const match = await Match.findById(id);
+        if (!match) {
+            return res.status(404).json({ error: 'Match not found' });
+        }
 
-        res.json({ success: true, message: 'Match deleted successfully' });
+        // Soft delete the match (keeps it in database for backup)
+        await Match.softDelete(id);
+        console.log(`✅ Admin ${req.user.username} soft deleted match: ${match.team_a} vs ${match.team_b} (ID: ${id})`);
+
+        res.json({
+            success: true,
+            message: 'Match deleted successfully (kept in database for backup)'
+        });
     } catch (error) {
         console.error('Error deleting match:', error);
         res.status(500).json({ error: 'Error deleting match' });

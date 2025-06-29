@@ -40,6 +40,7 @@ class Match {
                         COUNT(CASE WHEN p.predicted_winner = m.team_b THEN 1 END) as votes_team_b
                     FROM matches m
                     LEFT JOIN predictions p ON m.id = p.match_id
+                    WHERE m.deleted = 0 OR m.deleted IS NULL
                     GROUP BY m.id
                     ORDER BY m.match_time ASC
                 `);
@@ -230,14 +231,61 @@ class Match {
     static async update(matchId, matchData) {
         try {
             const { teamA, teamB, matchTime } = matchData;
-            await db.run(
-                'UPDATE matches SET team_a = ?, team_b = ?, match_time = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-                [teamA, teamB, matchTime, matchId]
-            );
+
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                await db.apiQuery('matches', {
+                    method: 'PATCH',
+                    filter: `id=eq.${matchId}`,
+                    body: {
+                        team_a: teamA,
+                        team_b: teamB,
+                        match_time: matchTime,
+                        updated_at: new Date().toISOString()
+                    }
+                });
+            } else {
+                // Using SQLite
+                await db.run(
+                    'UPDATE matches SET team_a = ?, team_b = ?, match_time = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    [teamA, teamB, matchTime, matchId]
+                );
+            }
 
             return await this.findById(matchId);
         } catch (error) {
             console.error('Error updating match:', error);
+            throw error;
+        }
+    }
+
+    static async softDelete(matchId) {
+        try {
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API
+                await db.apiQuery('matches', {
+                    method: 'PATCH',
+                    filter: `id=eq.${matchId}`,
+                    body: {
+                        deleted: true,
+                        deleted_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                });
+            } else {
+                // Using SQLite
+                await db.run(
+                    'UPDATE matches SET deleted = 1, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    [matchId]
+                );
+            }
+
+            console.log(`🗑️ Match ${matchId} soft deleted (kept in database for backup)`);
+            return true;
+        } catch (error) {
+            console.error('Error soft deleting match:', error);
             throw error;
         }
     }

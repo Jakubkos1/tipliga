@@ -222,7 +222,7 @@ class SupabaseAPI {
     // Match methods - proper Supabase authentication
     async getAllMatches() {
         try {
-            const url = `${this.baseUrl}/rest/v1/matches`;
+            const url = `${this.baseUrl}/rest/v1/matches?deleted=eq.false`;
             console.log('🔍 API call to:', url);
             console.log('🔑 Using API key:', this.apiKey ? 'Present' : 'Missing');
 
@@ -254,7 +254,7 @@ class SupabaseAPI {
 
     async getUpcomingMatches() {
         try {
-            const url = `${this.baseUrl}/rest/v1/matches?status=eq.upcoming`;
+            const url = `${this.baseUrl}/rest/v1/matches?status=eq.upcoming&deleted=eq.false`;
             console.log('🔍 API call to:', url);
 
             const response = await fetch(url, {
