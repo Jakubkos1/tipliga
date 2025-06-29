@@ -144,7 +144,7 @@ app.get('/debug-user', (req, res) => {
 // Debug route to check database connection
 app.get('/debug-db', async (req, res) => {
     try {
-        const isPostgres = process.env.DATABASE_URL && process.env.NODE_ENV === 'production';
+        const isPostgres = !!process.env.DATABASE_URL;
         const dbType = isPostgres ? 'PostgreSQL (Supabase)' : 'SQLite (Local)';
 
         // Test database connection
