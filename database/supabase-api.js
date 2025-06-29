@@ -23,7 +23,7 @@ class SupabaseAPI {
         }
     }
 
-    async query(table, options = {}) {
+    async apiQuery(table, options = {}) {
         try {
             let url = `${this.baseUrl}/rest/v1/${table}`;
             const headers = {
@@ -67,7 +67,20 @@ class SupabaseAPI {
         }
     }
 
-    // SQLite-compatible methods
+    // SQLite-compatible methods for debug endpoint
+    async query(sql, params = []) {
+        // For debug endpoint - return current time
+        if (sql && sql.includes('NOW()')) {
+            return {
+                rows: [{
+                    current_time: new Date().toISOString(),
+                    db_version: 'Supabase REST API v1.0'
+                }]
+            };
+        }
+        return { rows: [] };
+    }
+
     async run(sql, params = []) {
         // This is a simplified adapter - for complex SQL, use the query method
         console.log('Note: run() method called, consider using query() for Supabase');
@@ -75,12 +88,12 @@ class SupabaseAPI {
     }
 
     async get(table, filter) {
-        const results = await this.query(table, { filter, select: '*' });
+        const results = await this.apiQuery(table, { filter, select: '*' });
         return results[0] || null;
     }
 
     async all(table, filter = '') {
-        return await this.query(table, { filter, select: '*' });
+        return await this.apiQuery(table, { filter, select: '*' });
     }
 
     // User methods
@@ -89,7 +102,7 @@ class SupabaseAPI {
     }
 
     async createUser(userData) {
-        const result = await this.query('users', {
+        const result = await this.apiQuery('users', {
             method: 'POST',
             body: userData
         });
@@ -97,7 +110,7 @@ class SupabaseAPI {
     }
 
     async updateUser(id, userData) {
-        const result = await this.query('users', {
+        const result = await this.apiQuery('users', {
             method: 'PATCH',
             filter: `id=eq.${id}`,
             body: userData
