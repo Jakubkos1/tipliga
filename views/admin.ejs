@@ -443,10 +443,12 @@
                                             <%
                                                 const now = new Date();
                                                 const matchDate = new Date(match.match_time);
-                                                const canEvaluate = !match.winner && match.status !== 'finished' && now >= matchDate;
+                                                // TEMPORARILY ALLOW EVALUATION AT ANY TIME FOR TESTING
+                                                const canEvaluate = !match.winner && match.status !== 'finished'; // Removed time restriction
                                                 const isLocked = match.status !== 'upcoming' || (matchDate - now) <= (60 * 60 * 1000);
                                             %>
-                                            <% if (canEvaluate || match.winner) { %>
+                                            <!-- TESTING: Show buttons for any upcoming match -->
+                                            <% if (match.status === 'upcoming') { %>
                                                 <div class="border-l pl-2 ml-2" x-data="{ showTeamButtons: <%= !match.winner ? 'true' : 'false' %> }">
                                                     <!-- Team Selection Buttons (shown initially or after reset) -->
                                                     <div x-show="showTeamButtons" class="flex space-x-1">
