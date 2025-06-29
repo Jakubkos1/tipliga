@@ -583,12 +583,16 @@ app.put('/admin/matches/:id', isAdmin, async (req, res) => {
 app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`🗑️ DELETE request received for match ID: ${id} by user: ${req.user?.username}`);
 
         // Check if match exists and is not already deleted
         const match = await Match.findById(id);
         if (!match) {
+            console.log(`❌ Match ${id} not found`);
             return res.status(404).json({ error: 'Match not found' });
         }
+
+        console.log(`🔍 Found match to delete: ${match.team_a} vs ${match.team_b}`);
 
         // Soft delete the match (keeps it in database for backup)
         await Match.softDelete(id);
@@ -599,7 +603,7 @@ app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
             message: 'Match deleted successfully (kept in database for backup)'
         });
     } catch (error) {
-        console.error('Error deleting match:', error);
+        console.error('❌ Error deleting match:', error);
         res.status(500).json({ error: 'Error deleting match' });
     }
 });

@@ -197,6 +197,16 @@ class Match {
         const matchDate = new Date(matchTime);
         const lockTime = 60 * 60 * 1000; // 1 hour before match
 
+        // Debug timezone info
+        console.log('🕐 Timezone Debug:');
+        console.log('  Current time (local):', now.toLocaleString());
+        console.log('  Current time (UTC):', now.toISOString());
+        console.log('  Match time (parsed):', matchDate.toLocaleString());
+        console.log('  Match time (UTC):', matchDate.toISOString());
+        console.log('  Time until match (minutes):', Math.round((matchDate - now) / (1000 * 60)));
+        console.log('  Lock time (minutes):', lockTime / (1000 * 60));
+        console.log('  Is locked:', (matchDate - now) <= lockTime);
+
         return (matchDate - now) <= lockTime;
     }
 
@@ -262,10 +272,13 @@ class Match {
 
     static async softDelete(matchId) {
         try {
+            console.log(`🗑️ Starting soft delete for match ID: ${matchId}`);
+
             // Check if using Supabase API or SQLite
             if (db.apiQuery) {
                 // Using Supabase API
-                await db.apiQuery('matches', {
+                console.log('🔄 Using Supabase API for soft delete');
+                const result = await db.apiQuery('matches', {
                     method: 'PATCH',
                     filter: `id=eq.${matchId}`,
                     body: {
@@ -274,8 +287,10 @@ class Match {
                         updated_at: new Date().toISOString()
                     }
                 });
+                console.log('✅ Supabase soft delete result:', result);
             } else {
                 // Using SQLite
+                console.log('🔄 Using SQLite for soft delete');
                 await db.run(
                     'UPDATE matches SET deleted = 1, deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
                     [matchId]
@@ -285,7 +300,7 @@ class Match {
             console.log(`🗑️ Match ${matchId} soft deleted (kept in database for backup)`);
             return true;
         } catch (error) {
-            console.error('Error soft deleting match:', error);
+            console.error('❌ Error soft deleting match:', error);
             throw error;
         }
     }
