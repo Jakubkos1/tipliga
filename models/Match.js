@@ -3,29 +3,59 @@ const db = require('../database/db');
 class Match {
     static async getAll() {
         try {
-            const matches = await db.all(`
-                SELECT 
-                    m.*,
-                    COUNT(p.id) as total_predictions,
-                    COUNT(CASE WHEN p.predicted_winner = m.team_a THEN 1 END) as votes_team_a,
-                    COUNT(CASE WHEN p.predicted_winner = m.team_b THEN 1 END) as votes_team_b
-                FROM matches m
-                LEFT JOIN predictions p ON m.id = p.match_id
-                GROUP BY m.id
-                ORDER BY m.match_time ASC
-            `);
-            
-            // Calculate percentages
-            return matches.map(match => ({
-                ...match,
-                percent_team_a: match.total_predictions > 0 
-                    ? Math.round((match.votes_team_a / match.total_predictions) * 100) 
-                    : 0,
-                percent_team_b: match.total_predictions > 0 
-                    ? Math.round((match.votes_team_b / match.total_predictions) * 100) 
-                    : 0,
-                is_locked: this.isMatchLocked(match.match_time, match.status)
-            }));
+            // Check if using Supabase API or SQLite
+            if (db.getAllMatches) {
+                // Using Supabase API
+                const matches = await db.getAllMatches();
+
+                // Get predictions for each match to calculate votes
+                const matchesWithVotes = await Promise.all(matches.map(async (match) => {
+                    const predictions = await db.getUserPredictions ?
+                        await db.apiQuery('predictions', { filter: `match_id=eq.${match.id}`, select: '*' }) :
+                        [];
+
+                    const votes_team_a = predictions.filter(p => p.predicted_winner === match.team_a).length;
+                    const votes_team_b = predictions.filter(p => p.predicted_winner === match.team_b).length;
+                    const total_predictions = predictions.length;
+
+                    return {
+                        ...match,
+                        total_predictions,
+                        votes_team_a,
+                        votes_team_b,
+                        percent_team_a: total_predictions > 0 ? Math.round((votes_team_a / total_predictions) * 100) : 0,
+                        percent_team_b: total_predictions > 0 ? Math.round((votes_team_b / total_predictions) * 100) : 0,
+                        is_locked: this.isMatchLocked(match.match_time, match.status)
+                    };
+                }));
+
+                return matchesWithVotes;
+            } else {
+                // Using SQLite
+                const matches = await db.all(`
+                    SELECT
+                        m.*,
+                        COUNT(p.id) as total_predictions,
+                        COUNT(CASE WHEN p.predicted_winner = m.team_a THEN 1 END) as votes_team_a,
+                        COUNT(CASE WHEN p.predicted_winner = m.team_b THEN 1 END) as votes_team_b
+                    FROM matches m
+                    LEFT JOIN predictions p ON m.id = p.match_id
+                    GROUP BY m.id
+                    ORDER BY m.match_time ASC
+                `);
+
+                // Calculate percentages
+                return matches.map(match => ({
+                    ...match,
+                    percent_team_a: match.total_predictions > 0
+                        ? Math.round((match.votes_team_a / match.total_predictions) * 100)
+                        : 0,
+                    percent_team_b: match.total_predictions > 0
+                        ? Math.round((match.votes_team_b / match.total_predictions) * 100)
+                        : 0,
+                    is_locked: this.isMatchLocked(match.match_time, match.status)
+                }));
+            }
         } catch (error) {
             console.error('Error getting all matches:', error);
             throw error;
