@@ -193,21 +193,32 @@ class Match {
     static isMatchLocked(matchTime, status) {
         if (status !== 'upcoming') return true;
 
+        // Handle timezone properly - assume match times are in local timezone
         const now = new Date();
-        const matchDate = new Date(matchTime);
+        let matchDate = new Date(matchTime);
+
+        // If matchTime doesn't include timezone info, treat it as local time
+        if (typeof matchTime === 'string' && !matchTime.includes('T') && !matchTime.includes('Z')) {
+            // Format: "2024-01-15 14:30:00" - treat as local time
+            matchDate = new Date(matchTime.replace(' ', 'T'));
+        }
+
         const lockTime = 60 * 60 * 1000; // 1 hour before match
+        const timeUntilMatch = matchDate - now;
+        const minutesUntilMatch = Math.round(timeUntilMatch / (1000 * 60));
 
         // Debug timezone info
         console.log('🕐 Timezone Debug:');
-        console.log('  Current time (local):', now.toLocaleString());
+        console.log('  Current time (local):', now.toLocaleString('cs-CZ'));
         console.log('  Current time (UTC):', now.toISOString());
-        console.log('  Match time (parsed):', matchDate.toLocaleString());
+        console.log('  Match time (input):', matchTime);
+        console.log('  Match time (parsed):', matchDate.toLocaleString('cs-CZ'));
         console.log('  Match time (UTC):', matchDate.toISOString());
-        console.log('  Time until match (minutes):', Math.round((matchDate - now) / (1000 * 60)));
+        console.log('  Time until match (minutes):', minutesUntilMatch);
         console.log('  Lock time (minutes):', lockTime / (1000 * 60));
-        console.log('  Is locked:', (matchDate - now) <= lockTime);
+        console.log('  Is locked:', timeUntilMatch <= lockTime);
 
-        return (matchDate - now) <= lockTime;
+        return timeUntilMatch <= lockTime;
     }
 
     static canEvaluateMatch(matchTime, status) {
