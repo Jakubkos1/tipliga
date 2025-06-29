@@ -190,30 +190,77 @@ class Match {
         }
     }
 
+    // Helper function to get current time in Prague timezone
+    static getPragueTime() {
+        const now = new Date();
+        // Create a date object representing current time in Prague
+        const pragueTimeString = now.toLocaleString("en-CA", {
+            timeZone: "Europe/Prague",
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        return new Date(pragueTimeString.replace(', ', 'T'));
+    }
+
+    // Helper function to parse match time as Prague time
+    static parseMatchTimeAsPrague(matchTime) {
+        if (typeof matchTime === 'string') {
+            // If it's just a date string without timezone, treat as Prague time
+            if (!matchTime.includes('Z') && !matchTime.includes('+') && !matchTime.includes('-', 10)) {
+                // Add 'T' if missing and treat as Prague time
+                const timeStr = matchTime.includes('T') ? matchTime : matchTime.replace(' ', 'T');
+
+                // Create date in Prague timezone
+                const pragueDate = new Date(timeStr + (timeStr.length <= 16 ? ':00' : ''));
+
+                // Get Prague timezone offset (handles DST automatically)
+                const pragueOffset = new Date().toLocaleString("en-CA", {
+                    timeZone: "Europe/Prague",
+                    timeZoneName: "longOffset"
+                }).split('GMT')[1] || '+01:00';
+
+                // Parse the offset
+                const offsetMatch = pragueOffset.match(/([+-])(\d{2}):(\d{2})/);
+                if (offsetMatch) {
+                    const sign = offsetMatch[1] === '+' ? -1 : 1; // Reverse because we're converting TO UTC
+                    const hours = parseInt(offsetMatch[2]);
+                    const minutes = parseInt(offsetMatch[3]);
+                    const offsetMs = sign * (hours * 60 + minutes) * 60 * 1000;
+
+                    return new Date(pragueDate.getTime() + offsetMs);
+                }
+            }
+        }
+
+        // Fallback to regular Date parsing
+        return new Date(matchTime);
+    }
+
     static isMatchLocked(matchTime, status) {
         if (status !== 'upcoming') return true;
 
-        // Handle timezone properly - assume match times are in local timezone
-        const now = new Date();
-        let matchDate = new Date(matchTime);
+        // Get current time in Prague
+        const pragueNow = this.getPragueTime();
 
-        // If matchTime doesn't include timezone info, treat it as local time
-        if (typeof matchTime === 'string' && !matchTime.includes('T') && !matchTime.includes('Z')) {
-            // Format: "2024-01-15 14:30:00" - treat as local time
-            matchDate = new Date(matchTime.replace(' ', 'T'));
-        }
+        // Parse match time as Prague time
+        const pragueMatchTime = this.parseMatchTimeAsPrague(matchTime);
 
         const lockTime = 60 * 60 * 1000; // 1 hour before match
-        const timeUntilMatch = matchDate - now;
+        const timeUntilMatch = pragueMatchTime - pragueNow;
         const minutesUntilMatch = Math.round(timeUntilMatch / (1000 * 60));
 
         // Debug timezone info
-        console.log('🕐 Timezone Debug:');
-        console.log('  Current time (local):', now.toLocaleString('cs-CZ'));
-        console.log('  Current time (UTC):', now.toISOString());
+        console.log('🕐 Prague Timezone Debug:');
+        console.log('  Current time (Prague):', pragueNow.toLocaleString('cs-CZ'));
+        console.log('  Current time (UTC):', new Date().toISOString());
         console.log('  Match time (input):', matchTime);
-        console.log('  Match time (parsed):', matchDate.toLocaleString('cs-CZ'));
-        console.log('  Match time (UTC):', matchDate.toISOString());
+        console.log('  Match time (Prague parsed):', pragueMatchTime.toLocaleString('cs-CZ'));
+        console.log('  Match time (UTC):', pragueMatchTime.toISOString());
         console.log('  Time until match (minutes):', minutesUntilMatch);
         console.log('  Lock time (minutes):', lockTime / (1000 * 60));
         console.log('  Is locked:', timeUntilMatch <= lockTime);
@@ -226,23 +273,23 @@ class Match {
         if (status === 'finished') return true; // Already evaluated
         if (status !== 'upcoming') return false; // Invalid status
 
-        const now = new Date();
-        const matchDate = new Date(matchTime);
+        const pragueNow = this.getPragueTime();
+        const pragueMatchTime = this.parseMatchTimeAsPrague(matchTime);
 
-        // Can evaluate if match has started (current time >= match time)
-        return now >= matchDate;
+        // Can evaluate if match has started (current Prague time >= match time)
+        return pragueNow >= pragueMatchTime;
     }
 
     static getMatchStatus(matchTime, currentStatus) {
-        const now = new Date();
-        const matchDate = new Date(matchTime);
-        const oneHourBefore = matchDate.getTime() - (60 * 60 * 1000);
+        const pragueNow = this.getPragueTime();
+        const pragueMatchTime = this.parseMatchTimeAsPrague(matchTime);
+        const oneHourBefore = pragueMatchTime.getTime() - (60 * 60 * 1000);
 
         if (currentStatus === 'finished') return 'finished';
 
-        if (now.getTime() >= matchDate.getTime()) {
+        if (pragueNow.getTime() >= pragueMatchTime.getTime()) {
             return 'live'; // Match has started
-        } else if (now.getTime() >= oneHourBefore) {
+        } else if (pragueNow.getTime() >= oneHourBefore) {
             return 'locked'; // Betting closed
         } else {
             return 'upcoming'; // Still accepting bets
