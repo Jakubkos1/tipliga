@@ -192,7 +192,8 @@
                                                 Debug: status=<%= match.status %>, winner=<%= match.winner || 'none' %>, isAdmin=<%= isAdmin %>
                                             </div>
 
-                                            <% if (match.status === 'upcoming') { %>
+                                            <!-- TESTING: Show buttons for upcoming OR finished matches -->
+                                            <% if (match.status === 'upcoming' || match.status === 'finished') { %>
                                                 <div class="border-l pl-2 ml-2 flex space-x-1">
                                                     <% if (!match.winner) { %>
                                                         <!-- Team Selection Buttons -->
@@ -209,7 +210,7 @@
                                                             </button>
                                                         </form>
                                                     <% } else { %>
-                                                        <!-- Reset Button -->
+                                                        <!-- Reset Button for matches with winners -->
                                                         <form action="/admin/matches/<%= match.id %>/reset" method="POST" class="inline">
                                                             <button type="submit" class="text-orange-600 hover:text-orange-900 text-xs"
                                                                     onclick="return confirm('Reset result for <%= match.team_a %> vs <%= match.team_b %>? This will clear the winner and reset points.')">
@@ -220,7 +221,7 @@
                                                 </div>
                                             <% } else { %>
                                                 <div class="text-xs text-gray-500">
-                                                    Status: <%= match.status %> (not upcoming)
+                                                    Status: <%= match.status %> (no buttons available)
                                                 </div>
                                             <% } %>
                                         </div>
