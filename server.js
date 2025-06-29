@@ -596,7 +596,7 @@ app.post('/admin/matches/:id/delete', isAdmin, async (req, res) => {
         const match = await Match.findById(id);
         if (!match) {
             console.log(`❌ Match ${id} not found`);
-            return res.status(404).json({ error: 'Match not found' });
+            return res.redirect('/admin?error=Match not found');
         }
 
         console.log(`🔍 Found match to delete: ${match.team_a} vs ${match.team_b}`);
@@ -615,13 +615,11 @@ app.post('/admin/matches/:id/delete', isAdmin, async (req, res) => {
             throw directError;
         }
 
-        res.json({
-            success: true,
-            message: 'Match deleted successfully'
-        });
+        // Redirect back to admin panel with success message
+        res.redirect('/admin?success=Match deleted successfully!');
     } catch (error) {
         console.error('❌ Error deleting match:', error);
-        res.status(500).json({ error: 'Error deleting match' });
+        res.redirect('/admin?error=Error deleting match');
     }
 });
 
