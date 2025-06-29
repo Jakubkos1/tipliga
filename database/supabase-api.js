@@ -115,8 +115,55 @@ class SupabaseAPI {
         return { id: null, changes: 0 };
     }
 
-    async get(table, filter) {
-        const results = await this.apiQuery(table, { filter, select: '*' });
+    async get(sql, params = []) {
+        // Handle SQLite-style queries for compatibility
+        if (typeof sql === 'string' && sql.includes('SELECT')) {
+            console.log('⚠️ SQLite-style query detected, converting for Supabase API:', sql);
+
+            // Parse simple SELECT queries
+            if (sql.includes('FROM matches WHERE id = ?')) {
+                const id = params[0];
+                const results = await this.apiQuery('matches', {
+                    filter: `id=eq.${id}`,
+                    select: '*'
+                });
+                return results[0] || null;
+            }
+            else if (sql.includes('FROM users WHERE id = ?')) {
+                const id = params[0];
+                const results = await this.apiQuery('users', {
+                    filter: `id=eq.${id}`,
+                    select: '*'
+                });
+                return results[0] || null;
+            }
+            else if (sql.includes('FROM users WHERE discord_id = ?')) {
+                const discordId = params[0];
+                const results = await this.apiQuery('users', {
+                    filter: `discord_id=eq.${discordId}`,
+                    select: '*'
+                });
+                return results[0] || null;
+            }
+            else if (sql.includes('FROM predictions WHERE')) {
+                // Handle prediction queries
+                if (sql.includes('user_id = ? AND match_id = ?')) {
+                    const [userId, matchId] = params;
+                    const results = await this.apiQuery('predictions', {
+                        filter: `user_id=eq.${userId}&match_id=eq.${matchId}`,
+                        select: '*'
+                    });
+                    return results[0] || null;
+                }
+            }
+
+            // Fallback for unsupported queries
+            console.error('❌ Unsupported SQL query for Supabase API:', sql);
+            return null;
+        }
+
+        // Handle direct table/filter calls (legacy)
+        const results = await this.apiQuery(sql, { filter: params, select: '*' });
         return results[0] || null;
     }
 
