@@ -32,16 +32,16 @@
                     <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">v2.0</span>
 
                     <!-- Navigation -->
-                    <nav class="flex items-center space-x-2">
-                        <a href="/leaderboard" class="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
-                            🏆 Leaderboard
-                        </a>
-                        <% if (user) { %>
+                    <% if (user) { %>
+                        <nav class="flex items-center space-x-2">
+                            <a href="/leaderboard" class="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
+                                🏆 Leaderboard
+                            </a>
                             <a href="/my-predictions" class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
                                 📊 My Predictions
                             </a>
-                        <% } %>
-                    </nav>
+                        </nav>
+                    <% } %>
                 </div>
 
                 <div class="flex items-center space-x-4">
