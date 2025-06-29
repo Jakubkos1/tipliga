@@ -43,21 +43,54 @@ class Prediction {
 
     static async getUserPredictions(userId) {
         try {
-            const predictions = await db.all(`
-                SELECT 
-                    p.*,
-                    m.team_a,
-                    m.team_b,
-                    m.match_time,
-                    m.winner,
-                    m.status
-                FROM predictions p
-                JOIN matches m ON p.match_id = m.id
-                WHERE p.user_id = ?
-                ORDER BY m.match_time DESC
-            `, [userId]);
-            
-            return predictions;
+            // Check if using Supabase API or SQLite
+            if (db.apiQuery) {
+                // Using Supabase API - need to do separate queries and join in JavaScript
+                const predictions = await db.apiQuery('predictions', {
+                    filter: `user_id=eq.${userId}`,
+                    select: '*'
+                });
+
+                // Get match details for each prediction
+                const predictionsWithMatches = await Promise.all(predictions.map(async (prediction) => {
+                    const matches = await db.apiQuery('matches', {
+                        filter: `id=eq.${prediction.match_id}`,
+                        select: '*'
+                    });
+                    const match = matches[0];
+
+                    return {
+                        ...prediction,
+                        team_a: match?.team_a,
+                        team_b: match?.team_b,
+                        match_time: match?.match_time,
+                        winner: match?.winner,
+                        status: match?.status
+                    };
+                }));
+
+                // Sort by match_time DESC
+                return predictionsWithMatches.sort((a, b) =>
+                    new Date(b.match_time) - new Date(a.match_time)
+                );
+            } else {
+                // Using SQLite
+                const predictions = await db.all(`
+                    SELECT
+                        p.*,
+                        m.team_a,
+                        m.team_b,
+                        m.match_time,
+                        m.winner,
+                        m.status
+                    FROM predictions p
+                    JOIN matches m ON p.match_id = m.id
+                    WHERE p.user_id = ?
+                    ORDER BY m.match_time DESC
+                `, [userId]);
+
+                return predictions;
+            }
         } catch (error) {
             console.error('Error getting user predictions:', error);
             throw error;
