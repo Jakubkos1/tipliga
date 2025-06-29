@@ -598,10 +598,11 @@ app.use('/admin/matches', (req, res, next) => {
     next();
 });
 
-app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
+// Handle the POST route that the frontend is actually using
+app.post('/admin/matches/:id/delete', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        console.log(`🗑️ DELETE request received for match ID: ${id} by user: ${req.user?.username}`);
+        console.log(`🗑️ POST DELETE request received for match ID: ${id} by user: ${req.user?.username}`);
 
         // Check if match exists and is not already deleted
         const match = await Match.findById(id);
@@ -612,7 +613,7 @@ app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
 
         console.log(`🔍 Found match to delete: ${match.team_a} vs ${match.team_b}`);
 
-        // Skip Match.softDelete() for now and use direct API call
+        // Use direct Supabase API DELETE call
         console.log(`🔄 Using direct Supabase API DELETE for match ${id}...`);
         try {
             const directResult = await db.apiQuery('matches', {
@@ -628,7 +629,46 @@ app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Match deleted successfully (kept in database for backup)'
+            message: 'Match deleted successfully'
+        });
+    } catch (error) {
+        console.error('❌ Error deleting match:', error);
+        res.status(500).json({ error: 'Error deleting match' });
+    }
+});
+
+// Keep the original DELETE route as well for completeness
+app.delete('/admin/matches/:id', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`🗑️ DELETE request received for match ID: ${id} by user: ${req.user?.username}`);
+
+        // Check if match exists and is not already deleted
+        const match = await Match.findById(id);
+        if (!match) {
+            console.log(`❌ Match ${id} not found`);
+            return res.status(404).json({ error: 'Match not found' });
+        }
+
+        console.log(`🔍 Found match to delete: ${match.team_a} vs ${match.team_b}`);
+
+        // Use direct Supabase API DELETE call
+        console.log(`🔄 Using direct Supabase API DELETE for match ${id}...`);
+        try {
+            const directResult = await db.apiQuery('matches', {
+                method: 'DELETE',
+                filter: `id=eq.${id}`
+            });
+            console.log(`✅ Direct delete result:`, directResult);
+            console.log(`✅ Admin ${req.user.username} deleted match: ${match.team_a} vs ${match.team_b} (ID: ${id})`);
+        } catch (directError) {
+            console.error(`❌ Direct delete failed:`, directError);
+            throw directError;
+        }
+
+        res.json({
+            success: true,
+            message: 'Match deleted successfully'
         });
     } catch (error) {
         console.error('❌ Error deleting match:', error);
