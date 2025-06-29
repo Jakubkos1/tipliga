@@ -158,45 +158,7 @@ const checkCanManageMatches = (user) => {
     return checkIsAdmin(user) || checkIsModerator(user);
 };
 
-// Test route for debugging user session
-app.get('/debug-user', (req, res) => {
-    res.json({
-        isAuthenticated: req.isAuthenticated(),
-        user: req.user,
-        session: req.session
-    });
-});
 
-// Debug route to check database connection
-app.get('/debug-db', async (req, res) => {
-    try {
-        const isPostgres = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
-        const dbType = isPostgres ? 'PostgreSQL (Supabase)' : 'SQLite (Local)';
-
-        // Test database connection
-        let testResult;
-        if (isPostgres) {
-            testResult = await db.query('SELECT NOW() as current_time, version() as db_version');
-        } else {
-            testResult = await db.get('SELECT datetime("now") as current_time');
-        }
-
-        res.json({
-            database_type: dbType,
-            environment: process.env.NODE_ENV,
-            has_database_url: !!(process.env.DATABASE_URL || process.env.POSTGRES_URL),
-            database_url_preview: (process.env.DATABASE_URL || process.env.POSTGRES_URL) ? (process.env.DATABASE_URL || process.env.POSTGRES_URL).substring(0, 20) + '...' : 'Not set',
-            connection_test: testResult,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({
-            error: 'Database connection failed',
-            message: error.message,
-            database_type: process.env.DATABASE_URL ? 'PostgreSQL (Failed)' : 'SQLite (Failed)'
-        });
-    }
-});
 
 // Routes
 app.get('/', async (req, res) => {
