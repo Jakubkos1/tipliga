@@ -84,12 +84,12 @@
         <% if (!user) { %>
             <!-- Welcome Section -->
             <div class="text-center py-12">
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Vítejte v TipLiga v2.0!</h2>
-                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Tipujte výsledky zápasů a soutěžte s přáteli</p>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Welcome to TipLiga v2.0!</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Predict match results and compete with friends</p>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors">
-                        Začít tipovat
+                        Start Predicting
                     </a>
                     <a href="/leaderboard" class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-8 py-3 rounded-lg text-lg font-medium transition-colors">
                         🏆 View Leaderboard
@@ -99,11 +99,11 @@
         <% } else { %>
             <!-- Matches Section -->
             <div class="mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Nadcházející zápasy</h2>
-                
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Upcoming Matches</h2>
+
                 <% if (matches.length === 0) { %>
                     <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <p class="text-gray-500 dark:text-gray-400">Momentálně nejsou k dispozici žádné zápasy.</p>
+                        <p class="text-gray-500 dark:text-gray-400">No matches available at the moment.</p>
                     </div>
                 <% } else { %>
                     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -134,12 +134,12 @@
                                              if (result.success) {
                                                  this.userPrediction = winner;
                                                  await this.updateVoteStats();
-                                                 this.$dispatch('show-success', 'Tip byl úspěšně uložen! 🎯');
+                                                 this.$dispatch('show-success', 'Prediction saved successfully! 🎯');
                                              } else {
-                                                 this.$dispatch('show-error', 'Chyba: ' + result.error);
+                                                 this.$dispatch('show-error', 'Error: ' + result.error);
                                              }
                                          } catch (error) {
-                                             this.$dispatch('show-error', 'Chyba při ukládání tipu');
+                                             this.$dispatch('show-error', 'Error saving prediction');
                                          } finally {
                                              this.loading = false;
                                          }
