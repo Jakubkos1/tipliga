@@ -3,11 +3,16 @@ const db = require('../database/db');
 class User {
     static async findByDiscordId(discordId) {
         try {
-            const user = await db.get(
-                'SELECT * FROM users WHERE discord_id = ?',
-                [discordId]
-            );
-            return user;
+            // Check if using Supabase API or SQLite
+            if (db.findUserByDiscordId) {
+                return await db.findUserByDiscordId(discordId);
+            } else {
+                const user = await db.get(
+                    'SELECT * FROM users WHERE discord_id = ?',
+                    [discordId]
+                );
+                return user;
+            }
         } catch (error) {
             console.error('Error finding user by Discord ID:', error);
             throw error;

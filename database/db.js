@@ -2,15 +2,14 @@ const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
 
-// Temporarily disable PostgreSQL due to SSL issues on Vercel
-// Use SQLite with file persistence instead
-const usePostgres = false; // Temporarily disabled
+// Use Supabase REST API to avoid SSL certificate issues
+const useSupabaseAPI = !!(process.env.SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-if (usePostgres) {
-    console.log('🐘 Using PostgreSQL database (Supabase)');
-    module.exports = require('./postgres-db');
+if (useSupabaseAPI) {
+    console.log('🚀 Using Supabase REST API (no SSL issues)');
+    module.exports = require('./supabase-api');
 } else {
-    console.log('🗄️ Using SQLite database (file-based for persistence)');
+    console.log('🗄️ Using SQLite database (local development)');
 
 class Database {
     constructor() {
