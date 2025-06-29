@@ -208,23 +208,33 @@ class Match {
     static isMatchLocked(matchTime, status) {
         if (status !== 'upcoming') return true;
 
-        // Use simple approach - treat everything as local time
+        // Get current time in Prague timezone
         const now = new Date();
-        const matchDate = new Date(matchTime);
+        const pragueNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Prague"}));
+
+        // Parse match time and treat it as Prague time
+        let matchDate = new Date(matchTime);
+
+        // If the match time doesn't have timezone info, treat it as Prague time
+        if (typeof matchTime === 'string' && !matchTime.includes('Z') && !matchTime.includes('+')) {
+            // The match time is stored as "2025-06-29T17:02:00" but should be treated as Prague time
+            // We need to convert it from what the server thinks is UTC to Prague time
+            const pragueMatchTime = new Date(matchTime + '+01:00'); // Assume Prague timezone
+            matchDate = pragueMatchTime;
+        }
 
         const lockTime = 60 * 60 * 1000; // 1 hour before match
-        const timeUntilMatch = matchDate - now;
+        const timeUntilMatch = matchDate - pragueNow;
         const minutesUntilMatch = Math.round(timeUntilMatch / (1000 * 60));
 
         // Debug timezone info with more details
-        console.log('🕐 Simple Timezone Debug:');
+        console.log('🕐 Prague Timezone Debug (Fixed):');
         console.log('  Server time (now):', now.toISOString());
-        console.log('  Server time (local):', now.toLocaleString());
-        console.log('  Server time (Prague):', now.toLocaleString('cs-CZ', {timeZone: 'Europe/Prague'}));
+        console.log('  Prague time (now):', pragueNow.toISOString());
+        console.log('  Prague time (formatted):', pragueNow.toLocaleString('cs-CZ'));
         console.log('  Match time (input):', matchTime);
-        console.log('  Match time (parsed):', matchDate.toISOString());
-        console.log('  Match time (local):', matchDate.toLocaleString());
-        console.log('  Match time (Prague):', matchDate.toLocaleString('cs-CZ', {timeZone: 'Europe/Prague'}));
+        console.log('  Match time (parsed as Prague):', matchDate.toISOString());
+        console.log('  Match time (Prague formatted):', matchDate.toLocaleString('cs-CZ'));
         console.log('  Time difference (ms):', timeUntilMatch);
         console.log('  Time until match (minutes):', minutesUntilMatch);
         console.log('  Lock time (minutes):', lockTime / (1000 * 60));
