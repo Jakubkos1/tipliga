@@ -1,21 +1,34 @@
-<!-- Vercel Analytics -->
+<!-- Vercel Analytics & Speed Insights -->
 <script>
     // Vercel Analytics - Vanilla JS version
     (function() {
         if (typeof window !== 'undefined') {
             // Load Vercel Analytics
-            const script = document.createElement('script');
-            script.src = 'https://va.vercel-scripts.com/v1/script.js';
-            script.defer = true;
-            script.setAttribute('data-website-id', 'auto');
-            document.head.appendChild(script);
-            
+            const analyticsScript = document.createElement('script');
+            analyticsScript.src = 'https://va.vercel-scripts.com/v1/script.js';
+            analyticsScript.defer = true;
+            analyticsScript.setAttribute('data-website-id', 'auto');
+            document.head.appendChild(analyticsScript);
+
+            // Load Vercel Speed Insights
+            const speedScript = document.createElement('script');
+            speedScript.src = 'https://va.vercel-scripts.com/v1/speed-insights/script.js';
+            speedScript.defer = true;
+            speedScript.setAttribute('data-website-id', 'auto');
+            document.head.appendChild(speedScript);
+
             // Initialize analytics
             window.va = window.va || function() {
                 (window.vaq = window.vaq || []).push(arguments);
             };
-            
+
+            // Initialize speed insights
+            window.si = window.si || function() {
+                (window.siq = window.siq || []).push(arguments);
+            };
+
             console.log('📊 Vercel Analytics loaded');
+            console.log('⚡ Vercel Speed Insights loaded');
         }
     })();
 </script>
