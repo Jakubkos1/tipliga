@@ -186,21 +186,32 @@
                                                 </button>
                                             <% } %>
 
-                                            <!-- Set Result Buttons -->
-                                            <% if (!match.winner && match.status === 'upcoming') { %>
+                                            <!-- Set Result Buttons and Reset -->
+                                            <% if (match.status === 'upcoming') { %>
                                                 <div class="border-l pl-2 ml-2 flex space-x-1">
-                                                    <form action="/admin/matches/<%= match.id %>/result" method="POST" class="inline">
-                                                        <input type="hidden" name="winner" value="<%= match.team_a %>">
-                                                        <button type="submit" class="text-blue-600 hover:text-blue-900 text-xs">
-                                                            🏆 <%= match.team_a %>
-                                                        </button>
-                                                    </form>
-                                                    <form action="/admin/matches/<%= match.id %>/result" method="POST" class="inline">
-                                                        <input type="hidden" name="winner" value="<%= match.team_b %>">
-                                                        <button type="submit" class="text-red-600 hover:text-red-900 text-xs">
-                                                            🏆 <%= match.team_b %>
-                                                        </button>
-                                                    </form>
+                                                    <% if (!match.winner) { %>
+                                                        <!-- Team Selection Buttons -->
+                                                        <form action="/admin/matches/<%= match.id %>/result" method="POST" class="inline">
+                                                            <input type="hidden" name="winner" value="<%= match.team_a %>">
+                                                            <button type="submit" class="text-blue-600 hover:text-blue-900 text-xs">
+                                                                🏆 <%= match.team_a %>
+                                                            </button>
+                                                        </form>
+                                                        <form action="/admin/matches/<%= match.id %>/result" method="POST" class="inline">
+                                                            <input type="hidden" name="winner" value="<%= match.team_b %>">
+                                                            <button type="submit" class="text-red-600 hover:text-red-900 text-xs">
+                                                                🏆 <%= match.team_b %>
+                                                            </button>
+                                                        </form>
+                                                    <% } else { %>
+                                                        <!-- Reset Button -->
+                                                        <form action="/admin/matches/<%= match.id %>/reset" method="POST" class="inline">
+                                                            <button type="submit" class="text-orange-600 hover:text-orange-900 text-xs"
+                                                                    onclick="return confirm('Reset result for <%= match.team_a %> vs <%= match.team_b %>? This will clear the winner and reset points.')">
+                                                                🔄 Reset Result
+                                                            </button>
+                                                        </form>
+                                                    <% } %>
                                                 </div>
                                             <% } %>
                                         </div>

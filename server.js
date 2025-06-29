@@ -632,10 +632,10 @@ app.post('/admin/matches/:id/reset', isAuthenticated, isAdmin, async (req, res) 
         const resetMatch = await Match.resetResult(id);
         console.log(`✅ Admin ${req.user.username} reset result for match: ${resetMatch.team_a} vs ${resetMatch.team_b} (ID: ${id})`);
 
-        res.json({ success: true, message: 'Match result reset successfully! You can now set a new winner.' });
+        res.redirect('/admin?success=Match result reset successfully! You can now set a new winner.');
     } catch (error) {
         console.error('Error resetting match result:', error);
-        res.status(500).json({ success: false, error: 'Error resetting match result' });
+        res.redirect('/admin?error=Error resetting match result');
     }
 });
 
