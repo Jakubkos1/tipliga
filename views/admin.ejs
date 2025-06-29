@@ -219,6 +219,7 @@
                             <% matches.forEach(match => { %>
                                 <tr data-match-id="<%= match.id %>" x-data="{
                                     loading: false,
+                                    showTeamButtons: <%= !match.winner ? 'true' : 'false' %>,
                                     async setResult(winner) {
                                         this.loading = true;
                                         try {
@@ -230,13 +231,12 @@
 
                                             const result = await response.json();
                                             if (result.success) {
-                                                this.$dispatch('show-success', 'Výsledek byl úspěšně nastaven!');
+                                                this.$dispatch('show-success', `${winner} set as winner! Points awarded.`);
 
                                                 // Update the result column and status
                                                 const matchRow = this.$el.closest('tr');
                                                 const resultCell = matchRow.querySelector('[data-field="result"]');
                                                 const statusCell = matchRow.querySelector('[data-field="status"]');
-                                                const actionsCell = matchRow.querySelector('[data-field="actions"]');
 
                                                 if (resultCell) {
                                                     resultCell.innerHTML = `<span class="font-medium text-green-600">${winner}</span>`;
@@ -246,7 +246,8 @@
                                                     statusCell.innerHTML = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">finished</span>`;
                                                 }
 
-                                                // Don't remove buttons - they will be handled by Alpine.js state
+                                                // Hide team buttons and show reset button
+                                                this.showTeamButtons = false;
                                             } else {
                                                 this.$dispatch('show-error', 'Chyba: ' + result.error);
                                             }
@@ -299,9 +300,18 @@
                                                 // Update the result display immediately
                                                 const matchRow = this.$el.closest('tr');
                                                 const resultCell = matchRow.querySelector('[data-field="result"]');
+                                                const statusCell = matchRow.querySelector('[data-field="status"]');
+
                                                 if (resultCell) {
                                                     resultCell.innerHTML = `<span class="text-gray-400">Not set</span>`;
                                                 }
+
+                                                if (statusCell) {
+                                                    statusCell.innerHTML = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">upcoming</span>`;
+                                                }
+
+                                                // Show team buttons again
+                                                this.showTeamButtons = true;
 
                                                 this.$dispatch('show-success', 'Result reset! Select a new winner.');
                                             } else {
@@ -449,14 +459,14 @@
                                             %>
                                             <!-- TESTING: Show buttons for any upcoming match -->
                                             <% if (match.status === 'upcoming') { %>
-                                                <div class="border-l pl-2 ml-2" x-data="{ showTeamButtons: <%= !match.winner ? 'true' : 'false' %> }">
+                                                <div class="border-l pl-2 ml-2">
                                                     <!-- Team Selection Buttons (shown initially or after reset) -->
                                                     <div x-show="showTeamButtons" class="flex space-x-1">
-                                                        <button @click="setResult('<%= match.team_a %>'); showTeamButtons = false" :disabled="loading"
+                                                        <button @click="setResult('<%= match.team_a %>')" :disabled="loading"
                                                                 class="text-blue-600 hover:text-blue-900 disabled:opacity-50 text-xs">
                                                             🏆 <%= match.team_a %>
                                                         </button>
-                                                        <button @click="setResult('<%= match.team_b %>'); showTeamButtons = false" :disabled="loading"
+                                                        <button @click="setResult('<%= match.team_b %>')" :disabled="loading"
                                                                 class="text-red-600 hover:text-red-900 disabled:opacity-50 text-xs">
                                                             🏆 <%= match.team_b %>
                                                         </button>
@@ -464,7 +474,7 @@
 
                                                     <!-- Reset Button (shown after setting result) -->
                                                     <div x-show="!showTeamButtons">
-                                                        <button @click="resetResultLocal(<%= match.id %>); showTeamButtons = true" :disabled="loading"
+                                                        <button @click="resetResultLocal(<%= match.id %>)" :disabled="loading"
                                                                 class="text-orange-600 hover:text-orange-900 disabled:opacity-50 text-xs">
                                                             🔄 Reset Result
                                                         </button>
