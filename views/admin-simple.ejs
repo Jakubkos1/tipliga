@@ -205,12 +205,10 @@
                                                         </form>
                                                     <% } else { %>
                                                         <!-- Reset Button for matches with winners -->
-                                                        <form action="/admin/matches/<%= match.id %>/reset" method="POST" class="inline">
-                                                            <button type="submit" class="text-orange-600 hover:text-orange-900 text-xs"
-                                                                    onclick="return confirm('Reset result for <%= match.team_a %> vs <%= match.team_b %>? This will clear the winner and reset points.')">
-                                                                🔄 Reset Result
-                                                            </button>
-                                                        </form>
+                                                        <button onclick="openResetModal(<%= match.id %>, '<%= match.team_a %>', '<%= match.team_b %>')"
+                                                                class="text-orange-600 hover:text-orange-900 text-xs">
+                                                            🔄 Reset Result
+                                                        </button>
                                                     <% } %>
                                                 </div>
                                             <% } %>
@@ -376,6 +374,41 @@
         </div>
     </div>
 
+    <!-- Reset Confirmation Modal -->
+    <div id="resetModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 mb-4">
+                        <svg class="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Reset Match Result</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Are you sure you want to reset the result for<br>
+                        <strong id="resetMatchName"></strong>?<br>
+                        <span class="text-orange-600 dark:text-orange-400">This will clear the winner and reset all points for this match.</span>
+                    </p>
+
+                    <div class="flex justify-center space-x-3">
+                        <button onclick="closeResetModal()"
+                                class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                            Cancel
+                        </button>
+                        <form id="resetForm" method="POST" class="inline">
+                            <button type="submit"
+                                    class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors">
+                                🔄 Reset Result
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Set minimum date to current time for both forms
         function setMinimumDates() {
@@ -454,6 +487,17 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
+        // Reset Modal Functions
+        function openResetModal(id, teamA, teamB) {
+            document.getElementById('resetForm').action = `/admin/matches/${id}/reset`;
+            document.getElementById('resetMatchName').textContent = `${teamA} vs ${teamB}`;
+            document.getElementById('resetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+        }
+
         // Close modals when clicking outside
         document.getElementById('editModal').addEventListener('click', function(e) {
             if (e.target === this) closeEditModal();
@@ -463,11 +507,16 @@
             if (e.target === this) closeDeleteModal();
         });
 
+        document.getElementById('resetModal').addEventListener('click', function(e) {
+            if (e.target === this) closeResetModal();
+        });
+
         // Close modals with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeEditModal();
                 closeDeleteModal();
+                closeResetModal();
             }
         });
 
