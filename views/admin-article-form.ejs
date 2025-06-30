@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= isEdit ? 'Edit Article' : 'New Article' %> - Complay Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="/js/theme.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">🎮 Complay</a>
+                    <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Admin</span>
+                    
+                    <!-- Navigation -->
+                    <nav class="flex items-center space-x-2">
+                        <a href="/admin/articles" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors">← Back to Articles</a>
+                    </nav>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <% if (user) { %>
+                        <div class="flex items-center space-x-3">
+                            <% if (user.avatar_url) { %>
+                                <img src="<%= user.avatar_url %>" alt="Avatar" class="w-8 h-8 rounded-full">
+                            <% } %>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= user.username %></span>
+                            <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors">Logout</a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                <%= isEdit ? 'Edit Article' : 'Write New Article' %>
+            </h1>
+            <p class="text-gray-600 dark:text-gray-300 mt-2">
+                <%= isEdit ? 'Update your article content' : 'Create engaging content for your readers' %>
+            </p>
+        </div>
+
+        <!-- Article Form -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <form method="POST" action="<%= isEdit ? `/admin/articles/${article.id}/edit` : '/admin/articles' %>" class="p-6 space-y-6">
+                <!-- Title -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Article Title *
+                    </label>
+                    <input type="text" id="title" name="title" required
+                           value="<%= article ? article.title : '' %>"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Enter article title">
+                </div>
+
+                <!-- Excerpt -->
+                <div>
+                    <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Excerpt (Preview Text)
+                    </label>
+                    <textarea id="excerpt" name="excerpt" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Brief description that appears on the homepage..."><%= article ? article.excerpt : '' %></textarea>
+                </div>
+
+                <!-- Image URL -->
+                <div>
+                    <label for="image_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Featured Image URL
+                    </label>
+                    <input type="url" id="image_url" name="image_url"
+                           value="<%= article ? article.image_url : '' %>"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="https://example.com/image.jpg">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Optional: URL to an image that will be displayed with your article
+                    </p>
+                </div>
+
+                <!-- Content -->
+                <div>
+                    <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Article Content *
+                    </label>
+                    <textarea id="content" name="content" rows="20" required
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Write your article content here..."><%= article ? article.content : '' %></textarea>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        You can use basic HTML tags for formatting (p, strong, em, ul, ol, li, etc.)
+                    </p>
+                </div>
+
+                <!-- Published Status -->
+                <div class="flex items-center">
+                    <input type="checkbox" id="published" name="published" 
+                           <%= (article && article.published) || !isEdit ? 'checked' : '' %>
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded">
+                    <label for="published" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                        Publish article (make it visible on the website)
+                    </label>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <a href="/admin/articles" class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                        ← Cancel
+                    </a>
+                    <div class="flex space-x-3">
+                        <% if (isEdit) { %>
+                            <button type="submit" name="action" value="save"
+                                    class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-6 py-2 rounded-md font-medium transition-colors">
+                                Update Article
+                            </button>
+                        <% } else { %>
+                            <button type="submit" name="action" value="save"
+                                    class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-6 py-2 rounded-md font-medium transition-colors">
+                                Publish Article
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Writing Tips -->
+        <div class="mt-8 bg-blue-50 dark:bg-blue-900 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">✏️ Writing Tips</h3>
+            <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+                <li>• <strong>Title:</strong> Make it catchy and descriptive (50-60 characters work best)</li>
+                <li>• <strong>Excerpt:</strong> Write a compelling summary that makes readers want to click</li>
+                <li>• <strong>Images:</strong> Use high-quality images (1200x600px recommended for featured images)</li>
+                <li>• <strong>Content:</strong> Break up text with headings, lists, and paragraphs for easy reading</li>
+                <li>• <strong>SEO:</strong> Include relevant keywords naturally throughout your content</li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+                © 2024 Complay. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Analytics -->
+    <%- include('partials/analytics') %>
+</body>
+</html>

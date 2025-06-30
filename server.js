@@ -507,6 +507,150 @@ app.post('/admin/users/:id/delete', isAuthenticated, isAdmin, async (req, res) =
     }
 });
 
+// Admin article management routes
+app.get('/admin/articles', isAuthenticated, (req, res, next) => {
+    if (checkCanManageMatches(req.user)) {
+        next();
+    } else {
+        res.status(403).send('Access denied');
+    }
+}, async (req, res) => {
+    try {
+        // Get all articles (including unpublished) for admin management
+        let articles = [];
+        try {
+            articles = await Article.getAll(50); // Get latest 50 articles
+        } catch (error) {
+            console.log('⚠️ Articles table not available yet:', error.message);
+            articles = [];
+        }
+
+        res.render('admin-articles', {
+            user: req.user,
+            articles: articles,
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user),
+            isSuperAdmin: checkIsSuperAdmin(req.user)
+        });
+    } catch (error) {
+        console.error('Error loading admin articles:', error);
+        res.status(500).render('error', { message: 'Error loading articles' });
+    }
+});
+
+app.get('/admin/articles/new', isAuthenticated, (req, res, next) => {
+    if (checkCanManageMatches(req.user)) {
+        next();
+    } else {
+        res.status(403).send('Access denied');
+    }
+}, (req, res) => {
+    res.render('admin-article-form', {
+        user: req.user,
+        article: null, // New article
+        isEdit: false,
+        isAdmin: checkIsAdmin(req.user),
+        isModerator: checkIsModerator(req.user),
+        isSuperAdmin: checkIsSuperAdmin(req.user)
+    });
+});
+
+app.get('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
+    if (checkCanManageMatches(req.user)) {
+        next();
+    } else {
+        res.status(403).send('Access denied');
+    }
+}, async (req, res) => {
+    try {
+        const article = await Article.findById(req.params.id);
+        if (!article) {
+            return res.status(404).render('error', { message: 'Article not found' });
+        }
+
+        res.render('admin-article-form', {
+            user: req.user,
+            article: article,
+            isEdit: true,
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user),
+            isSuperAdmin: checkIsSuperAdmin(req.user)
+        });
+    } catch (error) {
+        console.error('Error loading article for edit:', error);
+        res.status(500).render('error', { message: 'Error loading article' });
+    }
+});
+
+app.post('/admin/articles', isAuthenticated, (req, res, next) => {
+    if (checkCanManageMatches(req.user)) {
+        next();
+    } else {
+        res.status(403).send('Access denied');
+    }
+}, async (req, res) => {
+    try {
+        const { title, content, excerpt, image_url, published } = req.body;
+
+        const articleData = {
+            title,
+            content,
+            excerpt,
+            image_url,
+            author_id: req.user.id,
+            published: published === 'on' ? 1 : 0
+        };
+
+        await Article.create(articleData);
+        res.redirect('/admin/articles?success=Article created successfully');
+    } catch (error) {
+        console.error('Error creating article:', error);
+        res.redirect('/admin/articles?error=Error creating article');
+    }
+});
+
+app.post('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
+    if (checkCanManageMatches(req.user)) {
+        next();
+    } else {
+        res.status(403).send('Access denied');
+    }
+}, async (req, res) => {
+    try {
+        const { title, content, excerpt, image_url, published } = req.body;
+
+        const articleData = {
+            title,
+            content,
+            excerpt,
+            image_url,
+            published: published === 'on' ? 1 : 0
+        };
+
+        await Article.update(req.params.id, articleData);
+        res.redirect('/admin/articles?success=Article updated successfully');
+    } catch (error) {
+        console.error('Error updating article:', error);
+        res.redirect('/admin/articles?error=Error updating article');
+    }
+});
+
+app.post('/admin/articles/:id/delete', isAuthenticated, (req, res, next) => {
+    if (checkCanManageMatches(req.user)) {
+        next();
+    } else {
+        res.status(403).send('Access denied');
+    }
+}, async (req, res) => {
+    try {
+        await Article.softDelete(req.params.id);
+        res.redirect('/admin/articles?success=Article deleted successfully');
+    } catch (error) {
+        console.error('Error deleting article:', error);
+        res.redirect('/admin/articles?error=Error deleting article');
+    }
+});
+
 // Admin routes - accessible to moderators for match management
 app.get('/admin', isAuthenticated, (req, res, next) => {
     if (checkCanManageMatches(req.user)) {
