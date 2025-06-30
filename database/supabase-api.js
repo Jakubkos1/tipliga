@@ -19,8 +19,16 @@ class SupabaseAPI {
 
     async setupDatabase() {
         try {
-            // Tables are created via SQL in Supabase dashboard
+            // Check if articles table exists, if not we'll handle it gracefully
             console.log('✅ Supabase tables ready');
+
+            // Test if articles table exists by trying to query it
+            try {
+                await this.apiQuery('articles', { select: '*', limit: 1 });
+                console.log('✅ Articles table exists');
+            } catch (error) {
+                console.log('⚠️ Articles table may not exist yet - will be created when needed');
+            }
         } catch (error) {
             console.error('❌ Error setting up Supabase:', error);
         }

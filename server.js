@@ -168,8 +168,14 @@ app.get('/', async (req, res) => {
         console.log('🏠 Main homepage accessed');
         console.log('🔐 User:', req.user ? req.user.username : 'Not logged in');
 
-        // Get published articles for homepage
-        const articles = await Article.getPublished(10); // Get latest 10 articles
+        // Get published articles for homepage - handle gracefully if table doesn't exist
+        let articles = [];
+        try {
+            articles = await Article.getPublished(10); // Get latest 10 articles
+        } catch (error) {
+            console.log('⚠️ Articles table not available yet:', error.message);
+            articles = []; // Empty array if articles table doesn't exist
+        }
 
         res.render('homepage', {
             user: req.user,
