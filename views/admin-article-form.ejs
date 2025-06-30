@@ -97,11 +97,67 @@
                     <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Article Content *
                     </label>
+
+                    <!-- Rich Text Toolbar -->
+                    <div class="border border-gray-300 dark:border-gray-600 rounded-t-md bg-gray-50 dark:bg-gray-700 p-2 flex flex-wrap gap-1">
+                        <!-- Text Formatting -->
+                        <button type="button" onclick="formatText('bold')" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" onclick="formatText('italic')" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button type="button" onclick="formatText('underline')" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="Underline">
+                            <u>U</u>
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1"></div>
+
+                        <!-- Highlighting -->
+                        <button type="button" onclick="insertHighlight()" class="px-2 py-1 text-sm bg-yellow-200 dark:bg-yellow-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-yellow-300 dark:hover:bg-yellow-500 transition-colors" title="Highlight">
+                            🖍️ Highlight
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1"></div>
+
+                        <!-- Links -->
+                        <button type="button" onclick="insertLink()" class="px-2 py-1 text-sm bg-blue-100 dark:bg-blue-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-blue-200 dark:hover:bg-blue-500 transition-colors" title="Insert Link">
+                            🔗 Link
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1"></div>
+
+                        <!-- Lists -->
+                        <button type="button" onclick="insertList('ul')" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="Bullet List">
+                            • List
+                        </button>
+                        <button type="button" onclick="insertList('ol')" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="Numbered List">
+                            1. List
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1"></div>
+
+                        <!-- Headings -->
+                        <button type="button" onclick="insertHeading('h2')" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="Heading 2">
+                            H2
+                        </button>
+                        <button type="button" onclick="insertHeading('h3')" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="Heading 3">
+                            H3
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1"></div>
+
+                        <!-- Paragraph -->
+                        <button type="button" onclick="insertParagraph()" class="px-2 py-1 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors" title="New Paragraph">
+                            ¶ Para
+                        </button>
+                    </div>
+
                     <textarea id="content" name="content" rows="20" required
-                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              class="w-full px-3 py-2 border-l border-r border-b border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                               placeholder="Write your article content here..."><%= article ? article.content : '' %></textarea>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        You can use basic HTML tags for formatting (p, strong, em, ul, ol, li, etc.)
+                        Use the toolbar above for quick formatting. You can also use HTML tags directly.
                     </p>
                 </div>
 
@@ -139,14 +195,29 @@
 
         <!-- Writing Tips -->
         <div class="mt-8 bg-blue-50 dark:bg-blue-900 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">✏️ Writing Tips</h3>
-            <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                <li>• <strong>Title:</strong> Make it catchy and descriptive (50-60 characters work best)</li>
-                <li>• <strong>Excerpt:</strong> Write a compelling summary that makes readers want to click</li>
-                <li>• <strong>Images:</strong> Use high-quality images (1200x600px recommended for featured images)</li>
-                <li>• <strong>Content:</strong> Break up text with headings, lists, and paragraphs for easy reading</li>
-                <li>• <strong>SEO:</strong> Include relevant keywords naturally throughout your content</li>
-            </ul>
+            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">✏️ Writing Tips & Shortcuts</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">Content Tips:</h4>
+                    <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>• <strong>Title:</strong> Make it catchy and descriptive (50-60 characters)</li>
+                        <li>• <strong>Excerpt:</strong> Write a compelling summary</li>
+                        <li>• <strong>Images:</strong> Use high-quality images (1200x600px)</li>
+                        <li>• <strong>Structure:</strong> Use headings, lists, and paragraphs</li>
+                        <li>• <strong>Highlighting:</strong> Use highlights for important points</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">Keyboard Shortcuts:</h4>
+                    <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>• <strong>Ctrl+B:</strong> Bold text</li>
+                        <li>• <strong>Ctrl+I:</strong> Italic text</li>
+                        <li>• <strong>Ctrl+U:</strong> Underline text</li>
+                        <li>• <strong>Ctrl+K:</strong> Insert link</li>
+                        <li>• <strong>Toolbar:</strong> Click buttons for more formatting</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -158,6 +229,130 @@
             </p>
         </div>
     </footer>
+
+    <!-- Rich Text Editor JavaScript -->
+    <script>
+        function getTextarea() {
+            return document.getElementById('content');
+        }
+
+        function insertAtCursor(textarea, text) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+
+            textarea.value = before + text + after;
+            textarea.selectionStart = textarea.selectionEnd = start + text.length;
+            textarea.focus();
+        }
+
+        function wrapSelection(textarea, startTag, endTag) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+
+            if (selectedText) {
+                textarea.value = before + startTag + selectedText + endTag + after;
+                textarea.selectionStart = start + startTag.length;
+                textarea.selectionEnd = start + startTag.length + selectedText.length;
+            } else {
+                textarea.value = before + startTag + endTag + after;
+                textarea.selectionStart = textarea.selectionEnd = start + startTag.length;
+            }
+            textarea.focus();
+        }
+
+        function formatText(type) {
+            const textarea = getTextarea();
+            switch(type) {
+                case 'bold':
+                    wrapSelection(textarea, '<strong>', '</strong>');
+                    break;
+                case 'italic':
+                    wrapSelection(textarea, '<em>', '</em>');
+                    break;
+                case 'underline':
+                    wrapSelection(textarea, '<u>', '</u>');
+                    break;
+            }
+        }
+
+        function insertHighlight() {
+            const textarea = getTextarea();
+            wrapSelection(textarea, '<mark style="background-color: #fef08a; padding: 2px 4px; border-radius: 3px;">', '</mark>');
+        }
+
+        function insertLink() {
+            const textarea = getTextarea();
+            const url = prompt('Enter the URL:');
+            if (url) {
+                const linkText = prompt('Enter the link text:', 'Click here');
+                if (linkText) {
+                    const linkHtml = `<a href="${url}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline">${linkText}</a>`;
+                    insertAtCursor(textarea, linkHtml);
+                }
+            }
+        }
+
+        function insertList(type) {
+            const textarea = getTextarea();
+            if (type === 'ul') {
+                const listHtml = '\n<ul class="list-disc list-inside my-4 space-y-1">\n  <li>List item 1</li>\n  <li>List item 2</li>\n  <li>List item 3</li>\n</ul>\n';
+                insertAtCursor(textarea, listHtml);
+            } else if (type === 'ol') {
+                const listHtml = '\n<ol class="list-decimal list-inside my-4 space-y-1">\n  <li>List item 1</li>\n  <li>List item 2</li>\n  <li>List item 3</li>\n</ol>\n';
+                insertAtCursor(textarea, listHtml);
+            }
+        }
+
+        function insertHeading(level) {
+            const textarea = getTextarea();
+            const headingText = prompt(`Enter ${level.toUpperCase()} heading text:`);
+            if (headingText) {
+                let classes = '';
+                if (level === 'h2') {
+                    classes = 'text-2xl font-bold text-gray-900 dark:text-white my-6';
+                } else if (level === 'h3') {
+                    classes = 'text-xl font-semibold text-gray-900 dark:text-white my-4';
+                }
+                const headingHtml = `\n<${level} class="${classes}">${headingText}</${level}>\n`;
+                insertAtCursor(textarea, headingHtml);
+            }
+        }
+
+        function insertParagraph() {
+            const textarea = getTextarea();
+            const paragraphHtml = '\n<p class="mb-4"></p>\n';
+            insertAtCursor(textarea, paragraphHtml);
+        }
+
+        // Add keyboard shortcuts
+        document.getElementById('content').addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'b':
+                        e.preventDefault();
+                        formatText('bold');
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        formatText('italic');
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        formatText('underline');
+                        break;
+                    case 'k':
+                        e.preventDefault();
+                        insertLink();
+                        break;
+                }
+            }
+        });
+    </script>
 
     <!-- Analytics -->
     <%- include('partials/analytics') %>
