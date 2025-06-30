@@ -161,8 +161,29 @@ const checkCanManageMatches = (user) => {
 
 
 // Routes
+// Main homepage route (articles page)
 app.get('/', async (req, res) => {
     try {
+        console.log('🏠 Main homepage accessed');
+        console.log('🔐 User:', req.user ? req.user.username : 'Not logged in');
+
+        res.render('homepage', {
+            user: req.user,
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user)
+        });
+    } catch (error) {
+        console.error('Error loading homepage:', error);
+        res.status(500).render('error', { message: 'Error loading homepage' });
+    }
+});
+
+// TipLiga route (moved from homepage)
+app.get('/tipliga', async (req, res) => {
+    try {
+        console.log('🏆 TipLiga accessed');
+        console.log('🔐 User:', req.user ? req.user.username : 'Not logged in');
+
         const matches = await Match.getUpcoming();
 
         // Add locking information to each match
@@ -181,7 +202,7 @@ app.get('/', async (req, res) => {
             }, {});
         }
 
-        console.log('🏠 Rendering homepage for user:', req.user);
+        console.log('🏆 Rendering TipLiga for user:', req.user);
         console.log('🔐 Is admin:', checkIsAdmin(req.user));
 
         res.render('index', {
@@ -192,7 +213,7 @@ app.get('/', async (req, res) => {
             isModerator: checkIsModerator(req.user)
         });
     } catch (error) {
-        console.error('Error loading homepage:', error);
+        console.error('Error loading TipLiga:', error);
         res.status(500).render('error', { message: 'Error loading matches' });
     }
 });
@@ -235,7 +256,7 @@ app.get('/logout', (req, res) => {
 });
 
 // User prediction history page
-app.get('/my-predictions', isAuthenticated, async (req, res) => {
+app.get('/tipliga/my-predictions', isAuthenticated, async (req, res) => {
     try {
         const predictions = await Prediction.getUserPredictions(req.user.id);
 
@@ -333,7 +354,7 @@ app.get('/api/match/:id/stats', async (req, res) => {
 });
 
 // Public leaderboard route
-app.get('/leaderboard', async (req, res) => {
+app.get('/tipliga/leaderboard', async (req, res) => {
     try {
         const leaderboard = await User.getLeaderboard();
         const stats = await Prediction.getStats();
