@@ -53,7 +53,7 @@
                     </button>
 
                     <% if (user) { %>
-                        <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-3" data-user="<%= user.username %>">
                             <% if (user.avatar_url) { %>
                                 <img src="<%= user.avatar_url %>" alt="Avatar" class="w-8 h-8 rounded-full">
                             <% } %>
@@ -240,6 +240,11 @@
             </div>
         </div>
     </footer>
+
+    <!-- Session Heartbeat -->
+    <% if (user) { %>
+        <script src="/js/session-heartbeat.js"></script>
+    <% } %>
 
     <!-- Analytics -->
     <%- include('partials/analytics') %>

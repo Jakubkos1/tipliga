@@ -52,15 +52,27 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback-secret-key',
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Reset expiration on each request
     cookie: {
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        httpOnly: true, // Prevent XSS attacks
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        sameSite: 'lax' // CSRF protection
     }
 }));
 
 // Passport configuration
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Middleware to refresh session on user activity
+app.use((req, res, next) => {
+    if (req.user && req.session) {
+        // Touch the session to reset the expiration
+        req.session.touch();
+    }
+    next();
+});
 
 passport.use(new DiscordStrategy({
     clientID: process.env.DISCORD_CLIENT_ID,
@@ -292,6 +304,16 @@ app.get('/logout', (req, res) => {
         }
         res.redirect('/');
     });
+});
+
+// Session heartbeat endpoint to keep sessions alive
+app.post('/api/heartbeat', (req, res) => {
+    if (req.user && req.session) {
+        req.session.touch();
+        res.json({ status: 'ok', user: req.user.username });
+    } else {
+        res.status(401).json({ status: 'unauthorized' });
+    }
 });
 
 // User prediction history page
