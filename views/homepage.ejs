@@ -34,9 +34,6 @@
                     <nav class="flex items-center space-x-4">
                         <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors">Articles</a>
                         <a href="/tipliga" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">🏆 TipLiga</a>
-                        <% if (user) { %>
-                            <a href="/tipliga/leaderboard" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors">Leaderboard</a>
-                        <% } %>
                     </nav>
                 </div>
 
@@ -76,7 +73,17 @@
         <!-- Hero Section -->
         <div class="text-center py-8 mb-8">
             <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Complay</h1>
-            <p class="text-xl text-gray-600 dark:text-gray-300 mb-6">Your source for gaming articles and esports news</p>
+            <p class="text-xl text-gray-600 dark:text-gray-300 mb-6">Your source for gaming articles, esports news, and predictions</p>
+
+            <!-- TipLiga Link -->
+            <div class="mt-6">
+                <a href="/tipliga" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-medium transition-colors">
+                    🏆 Try TipLiga Predictions
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
         </div>
 
         <!-- Featured Article (Newest) -->
@@ -153,30 +160,7 @@
             <% } %>
         </div>
 
-        <!-- TipLiga Preview Section -->
-        <div class="bg-gradient-to-r from-blue-600 to-purple-700 rounded-lg p-8 text-white">
-            <div class="text-center">
-                <h2 class="text-3xl font-bold mb-4">🏆 TipLiga Predictions</h2>
-                <p class="text-xl mb-6">Compete with friends by predicting esports match results!</p>
-                <div class="grid md:grid-cols-3 gap-6 mb-8">
-                    <div class="text-center">
-                        <div class="text-3xl font-bold">150+</div>
-                        <div class="text-blue-100">Total Predictions</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold">25</div>
-                        <div class="text-blue-100">Active Players</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold">12</div>
-                        <div class="text-blue-100">Matches This Week</div>
-                    </div>
-                </div>
-                <a href="/tipliga" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-medium transition-colors inline-block">
-                    Start Predicting Now →
-                </a>
-            </div>
-        </div>
+
     </main>
 
     <!-- Footer -->
@@ -191,8 +175,8 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Links</h3>
                     <ul class="space-y-2">
                         <li><a href="/tipliga" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">TipLiga</a></li>
-                        <li><a href="/tipliga/leaderboard" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Leaderboard</a></li>
                         <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">About</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Contact</a></li>
                     </ul>
                 </div>
                 <div>
