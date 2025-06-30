@@ -10,6 +10,7 @@ const path = require('path');
 const User = require('./models/User');
 const Match = require('./models/Match');
 const Prediction = require('./models/Prediction');
+const Article = require('./models/Article');
 const db = require('./database/db');
 
 const app = express();
@@ -167,8 +168,12 @@ app.get('/', async (req, res) => {
         console.log('🏠 Main homepage accessed');
         console.log('🔐 User:', req.user ? req.user.username : 'Not logged in');
 
+        // Get published articles for homepage
+        const articles = await Article.getPublished(10); // Get latest 10 articles
+
         res.render('homepage', {
             user: req.user,
+            articles: articles,
             isAdmin: checkIsAdmin(req.user),
             isModerator: checkIsModerator(req.user)
         });
