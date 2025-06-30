@@ -189,6 +189,34 @@ app.get('/', async (req, res) => {
     }
 });
 
+// Individual article reading page
+app.get('/articles/:id', async (req, res) => {
+    try {
+        console.log('📰 Article accessed:', req.params.id);
+
+        const article = await Article.findById(req.params.id);
+
+        if (!article) {
+            return res.status(404).render('error', { message: 'Article not found' });
+        }
+
+        // Check if article is published (unless user is admin/moderator)
+        if (!article.published && !checkCanManageMatches(req.user)) {
+            return res.status(404).render('error', { message: 'Article not found' });
+        }
+
+        res.render('article', {
+            user: req.user,
+            article: article,
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user)
+        });
+    } catch (error) {
+        console.error('Error loading article:', error);
+        res.status(500).render('error', { message: 'Error loading article' });
+    }
+});
+
 // TipLiga route (moved from homepage)
 app.get('/tipliga', async (req, res) => {
     try {

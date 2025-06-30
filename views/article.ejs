@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= article.title %> - Complay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="/js/theme.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200"
+      x-data="{
+          get darkMode() {
+              return localStorage.getItem('darkMode') === 'true';
+          },
+          toggleDarkMode() {
+              const newValue = !this.darkMode;
+              window.setTheme(newValue);
+          }
+      }">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">🎮 Complay</a>
+                    
+                    <!-- Navigation -->
+                    <nav class="flex items-center space-x-4">
+                        <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors">← Back to Articles</a>
+                        <a href="/tipliga" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">🏆 TipLiga</a>
+                    </nav>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Dark Mode Toggle -->
+                    <button @click="toggleDarkMode()" 
+                            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                            :title="darkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+                        <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                        <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </button>
+
+                    <% if (user) { %>
+                        <div class="flex items-center space-x-3">
+                            <% if (user.avatar_url) { %>
+                                <img src="<%= user.avatar_url %>" alt="Avatar" class="w-8 h-8 rounded-full">
+                            <% } %>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= user.username %></span>
+                            <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors">Logout</a>
+                        </div>
+                    <% } else { %>
+                        <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                            Login with Discord
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Article Header -->
+        <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <!-- Featured Image -->
+            <% if (article.image_url) { %>
+                <div class="h-64 md:h-96 bg-cover bg-center" style="background-image: url('<%= article.image_url %>')"></div>
+            <% } %>
+            
+            <!-- Article Content -->
+            <div class="p-8">
+                <!-- Article Meta -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                            Published <%= new Date(article.created_at).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            }) %>
+                        </span>
+                        <% if (article.author_name) { %>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">
+                                by <span class="font-medium text-gray-700 dark:text-gray-300"><%= article.author_name %></span>
+                            </span>
+                        <% } %>
+                    </div>
+                    
+                    <!-- Admin Actions -->
+                    <% if (user && (isAdmin || isModerator)) { %>
+                        <div class="flex space-x-2">
+                            <a href="/admin/articles/<%= article.id %>/edit" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
+                                ✏️ Edit
+                            </a>
+                        </div>
+                    <% } %>
+                </div>
+
+                <!-- Article Title -->
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+                    <%= article.title %>
+                </h1>
+
+                <!-- Article Excerpt -->
+                <% if (article.excerpt) { %>
+                    <div class="text-xl text-gray-600 dark:text-gray-300 mb-8 font-medium leading-relaxed">
+                        <%= article.excerpt %>
+                    </div>
+                <% } %>
+
+                <!-- Article Content -->
+                <div class="prose prose-lg dark:prose-invert max-w-none">
+                    <div class="text-gray-800 dark:text-gray-200 leading-relaxed">
+                        <%- article.content.replace(/\n/g, '<br>') %>
+                    </div>
+                </div>
+
+                <!-- Article Footer -->
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <% if (article.updated_at !== article.created_at) { %>
+                                Last updated <%= new Date(article.updated_at).toLocaleDateString() %>
+                            <% } %>
+                        </div>
+                        
+                        <!-- Share/Actions -->
+                        <div class="flex space-x-4">
+                            <a href="/" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
+                                ← Back to Articles
+                            </a>
+                            <a href="/tipliga" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
+                                Try TipLiga →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Related Articles or Call to Action -->
+        <div class="mt-12 bg-gradient-to-r from-blue-600 to-purple-700 rounded-lg p-8 text-white text-center">
+            <h3 class="text-2xl font-bold mb-4">Ready to Test Your Predictions?</h3>
+            <p class="text-xl mb-6">Join TipLiga and compete with other esports fans!</p>
+            <a href="/tipliga" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-medium transition-colors inline-block">
+                Start Predicting Now →
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Complay</h3>
+                    <p class="text-gray-600 dark:text-gray-300">Your ultimate destination for gaming articles and esports predictions.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Articles</a></li>
+                        <li><a href="/tipliga" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">TipLiga</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">About</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Connect</h3>
+                    <p class="text-gray-600 dark:text-gray-300">Join our community and stay updated with the latest gaming news.</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-500 dark:text-gray-400">© 2024 Complay. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Analytics -->
+    <%- include('partials/analytics') %>
+</body>
+</html>
