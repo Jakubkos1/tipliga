@@ -33,7 +33,7 @@
                     <!-- Navigation -->
                     <nav class="flex items-center space-x-4">
                         <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors">← Back to Articles</a>
-                        <a href="/tipliga" class="bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">🏆 TipLiga</a>
+                        <a href="/tipliga" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">🏆 TipLiga</a>
                     </nav>
                 </div>
 
@@ -99,7 +99,7 @@
                     <!-- Admin Actions -->
                     <% if (user && (isAdmin || isModerator)) { %>
                         <div class="flex space-x-2">
-                            <a href="/admin/articles/<%= article.id %>/edit" class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 text-sm font-medium">
+                            <a href="/admin/articles/<%= article.id %>/edit" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
                                 ✏️ Edit
                             </a>
                         </div>
@@ -136,10 +136,10 @@
                         
                         <!-- Share/Actions -->
                         <div class="flex space-x-4">
-                            <a href="/" class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 text-sm font-medium">
+                            <a href="/" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
                                 ← Back to Articles
                             </a>
-                            <a href="/tipliga" class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 text-sm font-medium">
+                            <a href="/tipliga" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
                                 Try TipLiga →
                             </a>
                         </div>
@@ -149,10 +149,10 @@
         </article>
 
         <!-- Related Articles or Call to Action -->
-        <div class="mt-12 bg-gradient-to-r from-orange-600 to-yellow-600 rounded-lg p-8 text-white text-center shadow-lg">
+        <div class="mt-12 bg-gradient-to-r from-blue-600 to-purple-700 rounded-lg p-8 text-white text-center">
             <h3 class="text-2xl font-bold mb-4">Ready to Test Your Predictions?</h3>
             <p class="text-xl mb-6">Join TipLiga and compete with other esports fans!</p>
-            <a href="/tipliga" class="bg-white text-orange-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-medium transition-colors inline-block shadow-md">
+            <a href="/tipliga" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-medium transition-colors inline-block">
                 Start Predicting Now →
             </a>
         </div>
