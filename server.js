@@ -56,7 +56,7 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true, // Prevent XSS attacks
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (more conservative)
         sameSite: 'lax' // CSRF protection
     }
 }));
@@ -65,11 +65,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Middleware to refresh session on user activity
+// Debug middleware to track session issues
 app.use((req, res, next) => {
-    if (req.user && req.session) {
-        // Touch the session to reset the expiration
-        req.session.touch();
+    if (req.originalUrl.includes('/tipliga') || req.originalUrl.includes('/auth')) {
+        console.log(`🔍 Session Debug - URL: ${req.originalUrl}`);
+        console.log(`🔍 User: ${req.user ? req.user.username : 'Not logged in'}`);
+        console.log(`🔍 Session ID: ${req.sessionID}`);
     }
     next();
 });
