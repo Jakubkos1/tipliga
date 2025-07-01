@@ -5,6 +5,8 @@ const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
 
 // Import models and database
 const User = require('./models/User');
@@ -34,6 +36,40 @@ const limiter = rateLimit({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadsDir);
+    },
+    filename: function (req, file, cb) {
+        // Generate unique filename with timestamp
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'article-' + uniqueSuffix + ext);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: function (req, file, cb) {
+        // Check file type
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    }
+});
 
 // View engine
 app.set('view engine', 'ejs');
@@ -639,23 +675,36 @@ app.post('/admin/articles', isAuthenticated, (req, res, next) => {
     } else {
         res.status(403).send('Access denied');
     }
-}, async (req, res) => {
+}, upload.single('image_file'), async (req, res) => {
     try {
         const { title, content, excerpt, image_url, published } = req.body;
+
+        // Determine image URL - prioritize uploaded file over URL
+        let finalImageUrl = image_url;
+        if (req.file) {
+            finalImageUrl = `/uploads/${req.file.filename}`;
+        }
 
         const articleData = {
             title,
             content,
             excerpt,
-            image_url,
+            image_url: finalImageUrl,
             author_id: req.user.id,
             published: published === 'on' ? 1 : 0
         };
 
         await Article.create(articleData);
+        console.log(`✅ ${req.user.username} created article: ${title}`);
         res.redirect('/admin/articles?success=Article created successfully');
     } catch (error) {
         console.error('Error creating article:', error);
+        // Clean up uploaded file if article creation failed
+        if (req.file) {
+            fs.unlink(req.file.path, (err) => {
+                if (err) console.error('Error deleting uploaded file:', err);
+            });
+        }
         res.redirect('/admin/articles?error=Error creating article');
     }
 });
@@ -666,22 +715,47 @@ app.post('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
     } else {
         res.status(403).send('Access denied');
     }
-}, async (req, res) => {
+}, upload.single('image_file'), async (req, res) => {
     try {
         const { title, content, excerpt, image_url, published } = req.body;
+
+        // Get current article to preserve existing image if no new one uploaded
+        const currentArticle = await Article.findById(req.params.id);
+
+        // Determine image URL - prioritize uploaded file over URL, then existing image
+        let finalImageUrl = currentArticle.image_url; // Keep existing by default
+        if (req.file) {
+            finalImageUrl = `/uploads/${req.file.filename}`;
+            // Delete old uploaded file if it exists and is in uploads folder
+            if (currentArticle.image_url && currentArticle.image_url.startsWith('/uploads/')) {
+                const oldFilePath = path.join(__dirname, 'public', currentArticle.image_url);
+                fs.unlink(oldFilePath, (err) => {
+                    if (err && err.code !== 'ENOENT') console.error('Error deleting old file:', err);
+                });
+            }
+        } else if (image_url && image_url !== currentArticle.image_url) {
+            finalImageUrl = image_url;
+        }
 
         const articleData = {
             title,
             content,
             excerpt,
-            image_url,
+            image_url: finalImageUrl,
             published: published === 'on' ? 1 : 0
         };
 
         await Article.update(req.params.id, articleData);
+        console.log(`✅ ${req.user.username} updated article: ${title}`);
         res.redirect('/admin/articles?success=Article updated successfully');
     } catch (error) {
         console.error('Error updating article:', error);
+        // Clean up uploaded file if article update failed
+        if (req.file) {
+            fs.unlink(req.file.path, (err) => {
+                if (err) console.error('Error deleting uploaded file:', err);
+            });
+        }
         res.redirect('/admin/articles?error=Error updating article');
     }
 });

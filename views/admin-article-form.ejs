@@ -56,7 +56,7 @@
 
         <!-- Article Form -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <form method="POST" action="<%= isEdit ? `/admin/articles/${article.id}/edit` : '/admin/articles' %>" class="p-6 space-y-6">
+            <form method="POST" action="<%= isEdit ? `/admin/articles/${article.id}/edit` : '/admin/articles' %>" enctype="multipart/form-data" class="p-6 space-y-6">
                 <!-- Title -->
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -78,18 +78,47 @@
                               placeholder="Brief description that appears on the homepage..."><%= article ? article.excerpt : '' %></textarea>
                 </div>
 
-                <!-- Image URL -->
+                <!-- Image Upload -->
                 <div>
-                    <label for="image_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Featured Image URL
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Obrázek článku
                     </label>
-                    <input type="url" id="image_url" name="image_url"
-                           value="<%= article ? article.image_url : '' %>"
-                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           placeholder="https://example.com/image.jpg">
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Optional: URL to an image that will be displayed with your article
-                    </p>
+
+                    <!-- Current Image Display -->
+                    <% if (article && article.image_url) { %>
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Současný obrázek:</p>
+                            <img src="<%= article.image_url %>" alt="Current article image" class="max-w-xs h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600">
+                        </div>
+                    <% } %>
+
+                    <!-- File Upload -->
+                    <div class="space-y-4">
+                        <div>
+                            <label for="image_file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Nahrát nový obrázek
+                            </label>
+                            <input type="file" id="image_file" name="image_file" accept="image/*"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                Podporované formáty: JPG, PNG, GIF (max 5MB)
+                            </p>
+                        </div>
+
+                        <!-- Alternative: Image URL -->
+                        <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                            <label for="image_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Nebo zadejte URL obrázku
+                            </label>
+                            <input type="url" id="image_url" name="image_url"
+                                   value="<%= article ? article.image_url : '' %>"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="https://example.com/image.jpg">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                Pokud nahrajete soubor, URL bude ignorováno
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Content -->
@@ -202,7 +231,7 @@
                     <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                         <li>• <strong>Title:</strong> Make it catchy and descriptive (50-60 characters)</li>
                         <li>• <strong>Excerpt:</strong> Write a compelling summary</li>
-                        <li>• <strong>Images:</strong> Use high-quality images (1200x600px)</li>
+                        <li>• <strong>Obrázky:</strong> Používejte kvalitní obrázky (1200x600px)</li>
                         <li>• <strong>Structure:</strong> Use headings, lists, and paragraphs</li>
                         <li>• <strong>Highlighting:</strong> Use highlights for important points</li>
                     </ul>
@@ -351,6 +380,53 @@
                         break;
                 }
             }
+        });
+    </script>
+
+    <!-- Image Preview Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('image_file');
+            const urlInput = document.getElementById('image_url');
+
+            // Create preview container
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'mt-4 hidden';
+            previewContainer.innerHTML = `
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Náhled:</p>
+                <img id="image_preview" class="max-w-xs h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600" alt="Image preview">
+            `;
+            fileInput.parentNode.appendChild(previewContainer);
+
+            // File upload preview
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('image_preview').src = e.target.result;
+                        previewContainer.classList.remove('hidden');
+                        // Clear URL input when file is selected
+                        urlInput.value = '';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.classList.add('hidden');
+                }
+            });
+
+            // URL input preview
+            urlInput.addEventListener('input', function(e) {
+                const url = e.target.value;
+                if (url && url.match(/\.(jpeg|jpg|gif|png)$/i)) {
+                    document.getElementById('image_preview').src = url;
+                    previewContainer.classList.remove('hidden');
+                    // Clear file input when URL is entered
+                    fileInput.value = '';
+                } else if (!url) {
+                    previewContainer.classList.add('hidden');
+                }
+            });
         });
     </script>
 
