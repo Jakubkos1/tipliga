@@ -37,39 +37,58 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Create uploads directory if it doesn't exist
+// Create uploads directory if it doesn't exist (only in local environment)
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+const isVercel = process.env.VERCEL || process.env.NODE_ENV === 'production';
+
+if (!isVercel) {
+    // Only create directory in local development
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
 }
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadsDir);
-    },
-    filename: function (req, file, cb) {
-        // Generate unique filename with timestamp
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, 'article-' + uniqueSuffix + ext);
-    }
-});
+let upload;
 
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
-    },
-    fileFilter: function (req, file, cb) {
-        // Check file type
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed!'), false);
+if (isVercel) {
+    // In serverless environment, disable file uploads and show error
+    upload = multer({
+        storage: multer.memoryStorage(),
+        limits: { fileSize: 1 }, // Effectively disable
+        fileFilter: function (req, file, cb) {
+            cb(new Error('File uploads are not supported in serverless environment. Please use image URLs instead.'), false);
         }
-    }
-});
+    });
+} else {
+    // Local development - normal file upload
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, uploadsDir);
+        },
+        filename: function (req, file, cb) {
+            // Generate unique filename with timestamp
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const ext = path.extname(file.originalname);
+            cb(null, 'article-' + uniqueSuffix + ext);
+        }
+    });
+
+    upload = multer({
+        storage: storage,
+        limits: {
+            fileSize: 5 * 1024 * 1024 // 5MB limit
+        },
+        fileFilter: function (req, file, cb) {
+            // Check file type
+            if (file.mimetype.startsWith('image/')) {
+                cb(null, true);
+            } else {
+                cb(new Error('Only image files are allowed!'), false);
+            }
+        }
+    });
+}
 
 // View engine
 app.set('view engine', 'ejs');
@@ -675,13 +694,24 @@ app.post('/admin/articles', isAuthenticated, (req, res, next) => {
     } else {
         res.status(403).send('Access denied');
     }
-}, upload.single('image_file'), async (req, res) => {
+}, (req, res, next) => {
+    // Handle file upload with error handling
+    upload.single('image_file')(req, res, function (err) {
+        if (err) {
+            console.log('File upload error (expected in production):', err.message);
+            // Continue without file upload in production
+            next();
+        } else {
+            next();
+        }
+    });
+}, async (req, res) => {
     try {
         const { title, content, excerpt, image_url, published } = req.body;
 
         // Determine image URL - prioritize uploaded file over URL
         let finalImageUrl = image_url;
-        if (req.file) {
+        if (req.file && !isVercel) {
             finalImageUrl = `/uploads/${req.file.filename}`;
         }
 
@@ -700,7 +730,7 @@ app.post('/admin/articles', isAuthenticated, (req, res, next) => {
     } catch (error) {
         console.error('Error creating article:', error);
         // Clean up uploaded file if article creation failed
-        if (req.file) {
+        if (req.file && !isVercel) {
             fs.unlink(req.file.path, (err) => {
                 if (err) console.error('Error deleting uploaded file:', err);
             });
@@ -715,7 +745,18 @@ app.post('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
     } else {
         res.status(403).send('Access denied');
     }
-}, upload.single('image_file'), async (req, res) => {
+}, (req, res, next) => {
+    // Handle file upload with error handling
+    upload.single('image_file')(req, res, function (err) {
+        if (err) {
+            console.log('File upload error (expected in production):', err.message);
+            // Continue without file upload in production
+            next();
+        } else {
+            next();
+        }
+    });
+}, async (req, res) => {
     try {
         const { title, content, excerpt, image_url, published } = req.body;
 
@@ -724,7 +765,7 @@ app.post('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
 
         // Determine image URL - prioritize uploaded file over URL, then existing image
         let finalImageUrl = currentArticle.image_url; // Keep existing by default
-        if (req.file) {
+        if (req.file && !isVercel) {
             finalImageUrl = `/uploads/${req.file.filename}`;
             // Delete old uploaded file if it exists and is in uploads folder
             if (currentArticle.image_url && currentArticle.image_url.startsWith('/uploads/')) {
@@ -751,7 +792,7 @@ app.post('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
     } catch (error) {
         console.error('Error updating article:', error);
         // Clean up uploaded file if article update failed
-        if (req.file) {
+        if (req.file && !isVercel) {
             fs.unlink(req.file.path, (err) => {
                 if (err) console.error('Error deleting uploaded file:', err);
             });
