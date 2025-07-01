@@ -84,6 +84,22 @@
             </div>
         <% } %>
 
+        <!-- Article Management -->
+        <% if (isAdmin || isModerator) { %>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">📝 Article Management</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">Create, edit, and manage articles for the homepage</p>
+                <div class="flex flex-wrap gap-3">
+                    <a href="/admin/articles/new" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                        ✏️ Napsat nový článek
+                    </a>
+                    <a href="/admin/articles" class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                        📋 Spravovat články
+                    </a>
+                </div>
+            </div>
+        <% } %>
+
         <!-- Add New Match -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-8" x-data="{ showForm: false }">
             <div class="p-6">

@@ -168,11 +168,6 @@
         <div class="mb-8 sm:mb-12">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Nejnovější články</h2>
-                <% if (user && (isAdmin || isModerator)) { %>
-                    <a href="/admin/articles" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors text-center">
-                        ✏️ Napsat článek
-                    </a>
-                <% } %>
             </div>
 
             <% if (articles && articles.length > 1) { %>
@@ -201,12 +196,7 @@
                 <!-- No Articles Yet -->
                 <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Zatím žádné články</h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">Buďte první, kdo zveřejní článek!</p>
-                    <% if (user && (isAdmin || isModerator)) { %>
-                        <a href="/admin/articles" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-6 py-2 rounded-md font-medium transition-colors">
-                            Napsat první článek
-                        </a>
-                    <% } %>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">Brzy zde budou k dispozici zajímavé články!</p>
                 </div>
             <% } %>
         </div>
