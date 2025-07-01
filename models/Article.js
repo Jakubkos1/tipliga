@@ -77,6 +77,50 @@ class Article {
         }
     }
 
+    static async getWithPagination(limit = 10, offset = 0, search = '') {
+        try {
+            let filter = 'deleted=eq.0&published=eq.1&order=created_at.desc';
+            let countFilter = 'deleted=eq.0&published=eq.1';
+
+            // Add search functionality
+            if (search && search.trim()) {
+                const searchTerm = search.trim();
+                // Search in title, content, and excerpt
+                const searchCondition = `and=(or(title.ilike.*${searchTerm}*,content.ilike.*${searchTerm}*,excerpt.ilike.*${searchTerm}*))`;
+                filter += `&${searchCondition}`;
+                countFilter += `&${searchCondition}`;
+            }
+
+            // Add pagination
+            filter += `&limit=${limit}&offset=${offset}`;
+
+            // Get articles with pagination
+            const articles = await db.all('articles', filter);
+
+            // Get total count for pagination (without limit/offset)
+            const allMatchingArticles = await db.all('articles', countFilter);
+            const totalCount = allMatchingArticles.length;
+
+            // Get author names for each article
+            for (const article of articles) {
+                if (article.author_id) {
+                    const author = await db.get('users', `id=eq.${article.author_id}`);
+                    if (author) {
+                        article.author_name = author.username;
+                    }
+                }
+            }
+
+            return {
+                articles: articles,
+                total: totalCount
+            };
+        } catch (error) {
+            console.error('Error getting articles with pagination:', error);
+            throw error;
+        }
+    }
+
     static async update(id, articleData) {
         try {
             const { title, content, excerpt, image_url } = articleData;

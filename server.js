@@ -257,6 +257,58 @@ app.get('/', async (req, res) => {
     }
 });
 
+// Articles listing page with pagination and search
+app.get('/articles', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10; // Articles per page
+        const search = req.query.search || '';
+        const offset = (page - 1) * limit;
+
+        console.log(`📰 Articles page accessed - Page: ${page}, Search: "${search}"`);
+
+        // Get articles with pagination and search
+        const result = await Article.getWithPagination(limit, offset, search);
+        const articles = result.articles;
+        const totalCount = result.total;
+        const totalPages = Math.ceil(totalCount / limit);
+
+        // Generate pagination info
+        const pagination = {
+            currentPage: page,
+            totalPages: totalPages,
+            totalArticles: totalCount,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+            nextPage: page + 1,
+            prevPage: page - 1,
+            pages: []
+        };
+
+        // Generate page numbers for pagination
+        const startPage = Math.max(1, page - 2);
+        const endPage = Math.min(totalPages, page + 2);
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.pages.push({
+                number: i,
+                isCurrent: i === page
+            });
+        }
+
+        res.render('articles-list', {
+            user: req.user,
+            articles: articles,
+            pagination: pagination,
+            search: search,
+            isAdmin: checkIsAdmin(req.user),
+            isModerator: checkIsModerator(req.user)
+        });
+    } catch (error) {
+        console.error('Error loading articles page:', error);
+        res.status(500).render('error', { message: 'Error loading articles' });
+    }
+});
+
 // Individual article reading page
 app.get('/articles/:id', async (req, res) => {
     try {
