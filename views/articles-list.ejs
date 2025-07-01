@@ -208,133 +208,47 @@
             <% if (articles.length > 0 && pagination.currentPage === 1 && !search) { %>
                 <div class="mb-12">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">🌟 Nejnovější článek</h2>
-                    <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 overflow-hidden">
-                        <% if (articles[0].image_url) { %>
-                            <!-- Article with Image -->
-                            <div class="lg:flex">
-                                <!-- Image Section -->
-                                <div class="lg:w-1/2">
-                                    <a href="/articles/<%= articles[0].id %>" class="group block">
-                                        <div class="relative h-64 md:h-80 lg:h-full overflow-hidden">
-                                            <img src="<%= articles[0].image_url %>" alt="<%= articles[0].title %>"
-                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent lg:hidden"></div>
-                                            <!-- Mobile overlay text -->
-                                            <div class="absolute bottom-0 left-0 right-0 p-6 text-white lg:hidden">
-                                                <h1 class="text-2xl md:text-3xl font-bold mb-2 group-hover:text-blue-300 transition-colors">
-                                                    <%= articles[0].title %>
-                                                </h1>
-                                                <div class="flex items-center text-sm text-gray-300">
-                                                    <span>
-                                                        <% if (articles[0].author_name) { %>
-                                                            <%= articles[0].author_name %>
-                                                        <% } else { %>
-                                                            Autor
-                                                        <% } %>
-                                                    </span>
-                                                    <span class="mx-2">•</span>
-                                                    <span>
-                                                        <%= new Date(articles[0].created_at).toLocaleDateString('cs-CZ') %>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-
-                                <!-- Content Section -->
-                                <div class="lg:w-1/2 p-6 lg:p-8 flex flex-col justify-between">
-                                    <!-- Desktop title and content -->
-                                    <div class="hidden lg:block">
-                                        <a href="/articles/<%= articles[0].id %>" class="group">
-                                            <h1 class="text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                                <%= articles[0].title %>
-                                            </h1>
-                                        </a>
-
+                    <a href="/articles/<%= articles[0].id %>" class="group block">
+                        <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 overflow-hidden">
+                            <% if (articles[0].image_url) { %>
+                                <div class="relative h-64 md:h-80 lg:h-96 overflow-hidden">
+                                    <img src="<%= articles[0].image_url %>" alt="<%= articles[0].title %>"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                    <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+                                        <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 group-hover:text-blue-300 transition-colors">
+                                            <%= articles[0].title %>
+                                        </h1>
                                         <% if (articles[0].excerpt) { %>
-                                            <p class="text-lg text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                                            <p class="text-lg text-gray-200 mb-3 line-clamp-2">
                                                 <%= articles[0].excerpt %>
                                             </p>
                                         <% } %>
-
-                                        <!-- Article content preview -->
-                                        <% if (articles[0].content) { %>
-                                            <div class="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                                                <%
-                                                    // Strip HTML tags and get first 300 characters
-                                                    let contentPreview = articles[0].content.replace(/<[^>]*>/g, '').substring(0, 300);
-                                                    if (articles[0].content.length > 300) {
-                                                        contentPreview += '...';
-                                                    }
-                                                %>
-                                                <p class="line-clamp-4"><%= contentPreview %></p>
-                                            </div>
-                                        <% } %>
-
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                                <span>
-                                                    <% if (articles[0].author_name) { %>
-                                                        <%= articles[0].author_name %>
-                                                    <% } else { %>
-                                                        Autor
-                                                    <% } %>
-                                                </span>
-                                                <span class="mx-2">•</span>
-                                                <span>
-                                                    <%= new Date(articles[0].created_at).toLocaleDateString('cs-CZ') %>
-                                                </span>
-                                            </div>
-                                            <a href="/articles/<%= articles[0].id %>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors">
-                                                Číst celý článek →
-                                            </a>
+                                        <div class="flex items-center text-sm text-gray-300">
+                                            <span>
+                                                <% if (articles[0].author_name) { %>
+                                                    <%= articles[0].author_name %>
+                                                <% } else { %>
+                                                    Autor
+                                                <% } %>
+                                            </span>
+                                            <span class="mx-2">•</span>
+                                            <span>
+                                                <%= new Date(articles[0].created_at).toLocaleDateString('cs-CZ') %>
+                                            </span>
                                         </div>
                                     </div>
-
-                                    <!-- Mobile excerpt and read more -->
-                                    <div class="lg:hidden">
-                                        <% if (articles[0].excerpt) { %>
-                                            <p class="text-gray-600 dark:text-gray-300 mb-4">
-                                                <%= articles[0].excerpt %>
-                                            </p>
-                                        <% } %>
-                                        <a href="/articles/<%= articles[0].id %>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors">
-                                            Číst celý článek →
-                                        </a>
-                                    </div>
                                 </div>
-                            </div>
-                        <% } else { %>
-                            <!-- Article without Image -->
-                            <div class="p-8">
-                                <a href="/articles/<%= articles[0].id %>" class="group">
-                                    <h1 class="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            <% } else { %>
+                                <div class="p-8">
+                                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                         <%= articles[0].title %>
                                     </h1>
-                                </a>
-
-                                <% if (articles[0].excerpt) { %>
-                                    <p class="text-xl text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                                        <%= articles[0].excerpt %>
-                                    </p>
-                                <% } %>
-
-                                <!-- Article content preview -->
-                                <% if (articles[0].content) { %>
-                                    <div class="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                                        <%
-                                            // Strip HTML tags and get first 500 characters for no-image layout
-                                            let contentPreview = articles[0].content.replace(/<[^>]*>/g, '').substring(0, 500);
-                                            if (articles[0].content.length > 500) {
-                                                contentPreview += '...';
-                                            }
-                                        %>
-                                        <p class="line-clamp-6"><%= contentPreview %></p>
-                                    </div>
-                                <% } %>
-
-                                <div class="flex items-center justify-between">
+                                    <% if (articles[0].excerpt) { %>
+                                        <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
+                                            <%= articles[0].excerpt %>
+                                        </p>
+                                    <% } %>
                                     <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                         <span>
                                             <% if (articles[0].author_name) { %>
@@ -348,13 +262,10 @@
                                             <%= new Date(articles[0].created_at).toLocaleDateString('cs-CZ') %>
                                         </span>
                                     </div>
-                                    <a href="/articles/<%= articles[0].id %>" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors">
-                                        Číst celý článek →
-                                    </a>
                                 </div>
-                            </div>
-                        <% } %>
-                    </article>
+                            <% } %>
+                        </article>
+                    </a>
                 </div>
             <% } %>
 
@@ -385,10 +296,25 @@
                                                 <%= article.title %>
                                             </h3>
                                             <% if (article.excerpt) { %>
-                                                <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+                                                <p class="text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
                                                     <%= article.excerpt %>
                                                 </p>
                                             <% } %>
+
+                                            <!-- Article content preview -->
+                                            <% if (article.content) { %>
+                                                <div class="text-gray-700 dark:text-gray-400 mb-4 text-sm leading-relaxed">
+                                                    <%
+                                                        // Strip HTML tags and get first 200 characters for regular articles
+                                                        let contentPreview = article.content.replace(/<[^>]*>/g, '').substring(0, 200);
+                                                        if (article.content.length > 200) {
+                                                            contentPreview += '...';
+                                                        }
+                                                    %>
+                                                    <p class="line-clamp-3"><%= contentPreview %></p>
+                                                </div>
+                                            <% } %>
+
                                             <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                                 <span>
                                                     <% if (article.author_name) { %>
