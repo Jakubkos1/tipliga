@@ -307,12 +307,12 @@ class Match {
         const adjustedMatchTime = matchDate.getTime() - pragueOffset;
         const adjustedMatchDate = new Date(adjustedMatchTime);
 
-        const lockTime = 60 * 60 * 1000; // 1 hour before match
+        // Změněno: uzavře se přesně v čase začátku zápasu (ne hodinu před)
         const timeUntilMatch = adjustedMatchDate - now;
         const minutesUntilMatch = Math.round(timeUntilMatch / (1000 * 60));
 
         // Debug timezone info with more details
-        console.log('🕐 Timezone Debug (Offset Corrected):');
+        console.log('🕐 Timezone Debug (Uzavření v čase začátku):');
         console.log('  Server time (UTC):', now.toISOString());
         console.log('  Server time (Prague):', now.toLocaleString('cs-CZ', {timeZone: 'Europe/Prague'}));
         console.log('  Match time (input):', matchTime);
@@ -321,11 +321,10 @@ class Match {
         console.log('  Match time (adjusted Prague):', adjustedMatchDate.toLocaleString('cs-CZ', {timeZone: 'Europe/Prague'}));
         console.log('  Time difference (ms):', timeUntilMatch);
         console.log('  Time until match (minutes):', minutesUntilMatch);
-        console.log('  Lock time (minutes):', lockTime / (1000 * 60));
-        console.log('  Is locked:', timeUntilMatch <= lockTime);
-        console.log('  Should be locked if minutes <=', lockTime / (1000 * 60));
+        console.log('  Is locked (match started):', timeUntilMatch <= 0);
 
-        return timeUntilMatch <= lockTime;
+        // Uzavře se když zápas začne (timeUntilMatch <= 0)
+        return timeUntilMatch <= 0;
     }
 
     static canEvaluateMatch(matchTime, status) {
