@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS matches (
     match_time DATETIME NOT NULL,
     winner TEXT NULL,
     status TEXT DEFAULT 'upcoming', -- upcoming, live, finished, cancelled
+    deleted BOOLEAN DEFAULT 0,
+    deleted_at DATETIME NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -57,6 +59,7 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE INDEX IF NOT EXISTS idx_users_discord_id ON users(discord_id);
 CREATE INDEX IF NOT EXISTS idx_matches_status ON matches(status);
 CREATE INDEX IF NOT EXISTS idx_matches_time ON matches(match_time);
+CREATE INDEX IF NOT EXISTS idx_matches_deleted ON matches(deleted);
 CREATE INDEX IF NOT EXISTS idx_predictions_user ON predictions(user_id);
 CREATE INDEX IF NOT EXISTS idx_predictions_match ON predictions(match_id);
 CREATE INDEX IF NOT EXISTS idx_articles_author ON articles(author_id);

@@ -230,110 +230,39 @@ const checkCanManageMatches = (user) => {
 
 
 // Routes
-// Main homepage route (articles page)
+// Main homepage route - redirect to TipLiga (articles disabled for now)
 app.get('/', async (req, res) => {
     try {
-        console.log('🏠 Main homepage accessed');
+        console.log('🏠 Main homepage accessed - redirecting to TipLiga');
         console.log('🔐 User:', req.user ? req.user.username : 'Not logged in');
 
-        // Get published articles for homepage - handle gracefully if table doesn't exist
-        let articles = [];
-        try {
-            articles = await Article.getPublished(10); // Get latest 10 articles
-        } catch (error) {
-            console.log('⚠️ Articles table not available yet:', error.message);
-            articles = []; // Empty array if articles table doesn't exist
-        }
-
-        res.render('homepage', {
-            user: req.user,
-            articles: articles,
-            isAdmin: checkIsAdmin(req.user),
-            isModerator: checkIsModerator(req.user)
-        });
+        // Redirect to TipLiga since we're focusing only on that for now
+        res.redirect('/tipliga');
     } catch (error) {
-        console.error('Error loading homepage:', error);
-        res.status(500).render('error', { message: 'Error loading homepage' });
+        console.error('Error redirecting to TipLiga:', error);
+        res.status(500).render('error', { message: 'Error loading page' });
     }
 });
 
-// Articles listing page with pagination and search
+// Articles listing page - DISABLED (redirect to TipLiga)
 app.get('/articles', async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 10; // Articles per page
-        const search = req.query.search || '';
-        const offset = (page - 1) * limit;
-
-        console.log(`📰 Articles page accessed - Page: ${page}, Search: "${search}"`);
-
-        // Get articles with pagination and search
-        const result = await Article.getWithPagination(limit, offset, search);
-        const articles = result.articles;
-        const totalCount = result.total;
-        const totalPages = Math.ceil(totalCount / limit);
-
-        // Generate pagination info
-        const pagination = {
-            currentPage: page,
-            totalPages: totalPages,
-            totalArticles: totalCount,
-            hasNext: page < totalPages,
-            hasPrev: page > 1,
-            nextPage: page + 1,
-            prevPage: page - 1,
-            pages: []
-        };
-
-        // Generate page numbers for pagination
-        const startPage = Math.max(1, page - 2);
-        const endPage = Math.min(totalPages, page + 2);
-        for (let i = startPage; i <= endPage; i++) {
-            pagination.pages.push({
-                number: i,
-                isCurrent: i === page
-            });
-        }
-
-        res.render('articles-list', {
-            user: req.user,
-            articles: articles,
-            pagination: pagination,
-            search: search,
-            isAdmin: checkIsAdmin(req.user),
-            isModerator: checkIsModerator(req.user)
-        });
+        console.log('📰 Articles page accessed - redirecting to TipLiga (articles disabled)');
+        res.redirect('/tipliga');
     } catch (error) {
-        console.error('Error loading articles page:', error);
-        res.status(500).render('error', { message: 'Error loading articles' });
+        console.error('Error redirecting from articles:', error);
+        res.status(500).render('error', { message: 'Error loading page' });
     }
 });
 
-// Individual article reading page
+// Individual article reading page - DISABLED (redirect to TipLiga)
 app.get('/articles/:id', async (req, res) => {
     try {
-        console.log('📰 Article accessed:', req.params.id);
-
-        const article = await Article.findById(req.params.id);
-
-        if (!article) {
-            return res.status(404).render('error', { message: 'Article not found' });
-        }
-
-        // Check if article is published (unless user is admin/moderator)
-        if (!article.published && !checkCanManageMatches(req.user)) {
-            return res.status(404).render('error', { message: 'Article not found' });
-        }
-
-        res.render('article', {
-            user: req.user,
-            article: article,
-            isAdmin: checkIsAdmin(req.user),
-            isModerator: checkIsModerator(req.user)
-        });
+        console.log('📰 Article accessed:', req.params.id, '- redirecting to TipLiga (articles disabled)');
+        res.redirect('/tipliga');
     } catch (error) {
-        console.error('Error loading article:', error);
-        res.status(500).render('error', { message: 'Error loading article' });
+        console.error('Error redirecting from article:', error);
+        res.status(500).render('error', { message: 'Error loading page' });
     }
 });
 
@@ -665,7 +594,8 @@ app.post('/admin/users/:id/delete', isAuthenticated, isAdmin, async (req, res) =
     }
 });
 
-// Admin article management routes
+// Admin article management routes - DISABLED (focusing on TipLiga only)
+/*
 app.get('/admin/articles', isAuthenticated, (req, res, next) => {
     if (checkCanManageMatches(req.user)) {
         next();
@@ -695,7 +625,9 @@ app.get('/admin/articles', isAuthenticated, (req, res, next) => {
         res.status(500).render('error', { message: 'Error loading articles' });
     }
 });
+*/
 
+/*
 app.get('/admin/articles/new', isAuthenticated, (req, res, next) => {
     if (checkCanManageMatches(req.user)) {
         next();
@@ -739,7 +671,9 @@ app.get('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
         res.status(500).render('error', { message: 'Error loading article' });
     }
 });
+*/
 
+/*
 app.post('/admin/articles', isAuthenticated, (req, res, next) => {
     if (checkCanManageMatches(req.user)) {
         next();
@@ -790,7 +724,9 @@ app.post('/admin/articles', isAuthenticated, (req, res, next) => {
         res.redirect('/admin/articles?error=Error creating article');
     }
 });
+*/
 
+/*
 app.post('/admin/articles/:id/edit', isAuthenticated, (req, res, next) => {
     if (checkCanManageMatches(req.user)) {
         next();
@@ -868,6 +804,7 @@ app.post('/admin/articles/:id/delete', isAuthenticated, (req, res, next) => {
         res.redirect('/admin/articles?error=Error deleting article');
     }
 });
+*/
 
 // Admin routes - accessible to moderators for match management
 app.get('/admin', isAuthenticated, (req, res, next) => {
