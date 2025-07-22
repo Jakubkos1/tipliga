@@ -8,6 +8,21 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 
+// Security utility functions
+const sanitizeInput = (input) => {
+    if (typeof input !== 'string') return input;
+    return input.replace(/[<>'"&]/g, (match) => {
+        const entities = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#x27;',
+            '&': '&amp;'
+        };
+        return entities[match];
+    });
+};
+
 // Import models and database
 const User = require('./models/User');
 const Match = require('./models/Match');
@@ -31,8 +46,21 @@ const limiter = rateLimit({
 });
 
 // Middleware
-// Temporarily disable rate limiting for debugging
-// app.use(limiter);
+// Enable rate limiting for security
+app.use(limiter);
+
+// Security headers
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -103,8 +131,13 @@ app.use((req, res, next) => {
 });
 
 // Session configuration
+if (!process.env.SESSION_SECRET) {
+    console.error('❌ SESSION_SECRET environment variable is required for security');
+    process.exit(1);
+}
+
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     rolling: true, // Reset expiration on each request
@@ -120,12 +153,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Debug middleware to track session issues
+// Debug middleware to track session issues (disabled in production for security)
 app.use((req, res, next) => {
-    if (req.originalUrl.includes('/tipliga') || req.originalUrl.includes('/auth')) {
+    if (process.env.NODE_ENV !== 'production' && (req.originalUrl.includes('/tipliga') || req.originalUrl.includes('/auth'))) {
         console.log(`🔍 Session Debug - URL: ${req.originalUrl}`);
         console.log(`🔍 User: ${req.user ? req.user.username : 'Not logged in'}`);
-        console.log(`🔍 Session ID: ${req.sessionID}`);
+        // Don't log session ID for security
     }
     next();
 });
@@ -137,7 +170,10 @@ passport.use(new DiscordStrategy({
     scope: ['identify']
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        console.log('🔍 Discord profile data:', JSON.stringify(profile, null, 2));
+        // Only log in development for security
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('🔍 Discord profile data:', JSON.stringify(profile, null, 2));
+        }
 
         // Discord profile structure: profile.id, profile.username, profile.avatar, profile.discriminator
         const discordUser = {
@@ -147,7 +183,9 @@ passport.use(new DiscordStrategy({
             avatar: profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null
         };
 
-        console.log('🔍 Processed Discord user:', discordUser);
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('🔍 Processed Discord user:', discordUser);
+        }
 
         const user = await User.updateOrCreate(discordUser);
         console.log('🔍 Database user:', user);
@@ -378,29 +416,45 @@ app.get('/tipliga/my-predictions', isAuthenticated, async (req, res) => {
 // Prediction routes
 app.post('/predict', isAuthenticated, async (req, res) => {
     try {
-        const { matchId, winner } = req.body;
-        
+        let { matchId, winner } = req.body;
+
         if (!matchId || !winner) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
-        
+
+        // Validate and sanitize inputs
+        matchId = parseInt(matchId);
+        if (isNaN(matchId) || matchId <= 0) {
+            return res.status(400).json({ error: 'Invalid match ID' });
+        }
+
+        winner = sanitizeInput(winner.toString().trim());
+        if (winner.length === 0 || winner.length > 50) {
+            return res.status(400).json({ error: 'Invalid winner name' });
+        }
+
         // Check if match exists and is not locked
         const match = await Match.findById(matchId);
         if (!match) {
             return res.status(404).json({ error: 'Match not found' });
         }
-        
+
+        // Validate that winner is one of the teams
+        if (winner !== match.team_a && winner !== match.team_b) {
+            return res.status(400).json({ error: 'Winner must be one of the competing teams' });
+        }
+
         if (Match.isMatchLocked(match.match_time, match.status)) {
             return res.status(400).json({ error: 'Betting is closed for this match' });
         }
-        
+
         // Create or update prediction
         await Prediction.create({
             userId: req.user.id,
-            matchId: parseInt(matchId),
+            matchId: matchId,
             predictedWinner: winner
         });
-        
+
         res.json({ success: true, message: 'Prediction saved successfully!' });
     } catch (error) {
         console.error('Error saving prediction:', error);
@@ -846,15 +900,32 @@ app.post('/admin/matches', isAuthenticated, (req, res, next) => {
     }
 }, async (req, res) => {
     try {
-        const { teamA, teamB, matchTime } = req.body;
+        let { teamA, teamB, matchTime } = req.body;
 
         if (!teamA || !teamB || !matchTime) {
             return res.redirect('/admin?error=Missing required fields');
         }
 
+        // Sanitize team names to prevent XSS
+        teamA = sanitizeInput(teamA.trim());
+        teamB = sanitizeInput(teamB.trim());
+
+        // Validate team names length and content
+        if (teamA.length > 50 || teamB.length > 50) {
+            return res.redirect('/admin?error=Team names must be 50 characters or less');
+        }
+
+        if (teamA === teamB) {
+            return res.redirect('/admin?error=Team names must be different');
+        }
+
         // Validate that match time is in the future
         const matchDate = new Date(matchTime);
         const now = new Date();
+
+        if (isNaN(matchDate.getTime())) {
+            return res.redirect('/admin?error=Invalid match time format');
+        }
 
         if (matchDate <= now) {
             return res.redirect('/admin?error=Match time must be in the future');

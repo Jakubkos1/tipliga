@@ -111,12 +111,12 @@
                             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
                                  x-data="{
                                      loading: false,
-                                     userPrediction: '<%= userPredictions[match.id] || "" %>',
-                                     totalPredictions: <%= match.total_predictions %>,
-                                     votesTeamA: <%= match.votes_team_a %>,
-                                     votesTeamB: <%= match.votes_team_b %>,
-                                     percentTeamA: <%= match.percent_team_a %>,
-                                     percentTeamB: <%= match.percent_team_b %>,
+                                     userPrediction: <%- JSON.stringify(userPredictions[match.id] || "") %>,
+                                     totalPredictions: <%- JSON.stringify(match.total_predictions) %>,
+                                     votesTeamA: <%- JSON.stringify(match.votes_team_a) %>,
+                                     votesTeamB: <%- JSON.stringify(match.votes_team_b) %>,
+                                     percentTeamA: <%- JSON.stringify(match.percent_team_a) %>,
+                                     percentTeamB: <%- JSON.stringify(match.percent_team_b) %>,
 
                                      async makePrediction(winner) {
                                          this.loading = true;
@@ -125,7 +125,7 @@
                                                  method: 'POST',
                                                  headers: { 'Content-Type': 'application/json' },
                                                  body: JSON.stringify({
-                                                     matchId: <%= match.id %>,
+                                                     matchId: <%- JSON.stringify(match.id) %>,
                                                      winner: winner
                                                  })
                                              });
@@ -147,7 +147,7 @@
 
                                      async updateVoteStats() {
                                          try {
-                                             const response = await fetch('/api/match/<%= match.id %>/stats');
+                                             const response = await fetch('/api/match/' + <%- JSON.stringify(match.id) %> + '/stats');
                                              const stats = await response.json();
 
                                              if (stats.success) {
@@ -209,19 +209,19 @@
                                     </div>
                                 <% } else { %>
                                     <div class="flex space-x-2 mb-4">
-                                        <button 
-                                            @click="makePrediction('<%= match.team_a %>')"
+                                        <button
+                                            @click="makePrediction(<%- JSON.stringify(match.team_a) %>)"
                                             :disabled="loading"
-                                            :class="userPrediction === '<%= match.team_a %>' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'"
+                                            :class="userPrediction === <%- JSON.stringify(match.team_a) %> ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'"
                                             class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
-                                            <%= match.team_a %>
+                                            <%- match.team_a %>
                                         </button>
-                                        <button 
-                                            @click="makePrediction('<%= match.team_b %>')"
+                                        <button
+                                            @click="makePrediction(<%- JSON.stringify(match.team_b) %>)"
                                             :disabled="loading"
-                                            :class="userPrediction === '<%= match.team_b %>' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-red-50'"
+                                            :class="userPrediction === <%- JSON.stringify(match.team_b) %> ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-red-50'"
                                             class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors disabled:opacity-50">
-                                            <%= match.team_b %>
+                                            <%- match.team_b %>
                                         </button>
                                     </div>
                                 <% } %>
