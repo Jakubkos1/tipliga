@@ -84,12 +84,12 @@
         <% if (!user) { %>
             <!-- Welcome Section -->
             <div class="text-center py-12 mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Welcome to TipLiga v2.0!</h2>
-                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Predict match results and compete with friends</p>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Vítejte v TipLiga v2.0!</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Tipujte výsledky zápasů a soutěžte s přáteli</p>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors">
-                        Start Predicting
+                        Začít tipovat
                     </a>
                     <a href="/tipliga/leaderboard" class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-8 py-3 rounded-lg text-lg font-medium transition-colors">
                         🏆 View Leaderboard
@@ -102,9 +102,9 @@
         <div class="mb-8">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                 <% if (user) { %>
-                    Upcoming Matches
+                    Nadcházející zápasy
                 <% } else { %>
-                    Current Matches - Login to Predict!
+                    Aktuální zápasy - Přihlaste se pro tipování!
                 <% } %>
             </h2>
 
@@ -142,12 +142,12 @@
                                              if (result.success) {
                                                  this.userPrediction = winner;
                                                  await this.updateVoteStats();
-                                                 this.$dispatch('show-success', 'Prediction saved successfully! 🎯');
+                                                 this.$dispatch('show-success', 'Tip byl úspěšně uložen! 🎯');
                                              } else {
-                                                 this.$dispatch('show-error', 'Error: ' + result.error);
+                                                 this.$dispatch('show-error', 'Chyba: ' + result.error);
                                              }
                                          } catch (error) {
-                                             this.$dispatch('show-error', 'Error saving prediction');
+                                             this.$dispatch('show-error', 'Chyba při ukládání tipu');
                                          } finally {
                                              this.loading = false;
                                          }
@@ -205,7 +205,7 @@
                                             </div>
                                         </div>
                                         <a href="/auth/discord" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                                            🔐 Login to Predict
+                                            🔐 Přihlásit se pro tipování
                                         </a>
                                     </div>
                                 <% } else if (match.is_locked) { %>
@@ -273,12 +273,12 @@
                                         </div>
 
                                         <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-                                            Total predictions: <span x-text="totalPredictions"></span>
+                                            Celkem tipů: <span x-text="totalPredictions"></span>
                                         </p>
                                     </div>
 
                                     <div x-show="totalPredictions === 0" class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                        No predictions yet
+                                        Zatím žádné tipy
                                     </div>
                                 <% } else { %>
                                     <!-- Static stats for non-logged users -->
@@ -301,12 +301,12 @@
                                             </div>
 
                                             <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-                                                Total predictions: <%= match.total_predictions %>
+                                                Celkem tipů: <%= match.total_predictions %>
                                             </p>
                                         </div>
                                     <% } else { %>
                                         <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                            No predictions yet
+                                            Zatím žádné tipy
                                         </div>
                                     <% } %>
                                 <% } %>
