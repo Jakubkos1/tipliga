@@ -83,7 +83,7 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <% if (!user) { %>
             <!-- Welcome Section -->
-            <div class="text-center py-12">
+            <div class="text-center py-12 mb-8">
                 <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Vítejte v TipLiga v2.0!</h2>
                 <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Tipujte výsledky zápasů a soutěžte s přáteli</p>
 
@@ -91,15 +91,22 @@
                     <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors">
                         Začít tipovat
                     </a>
-                    <a href="/leaderboard" class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-8 py-3 rounded-lg text-lg font-medium transition-colors">
+                    <a href="/tipliga/leaderboard" class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-8 py-3 rounded-lg text-lg font-medium transition-colors">
                         🏆 View Leaderboard
                     </a>
                 </div>
             </div>
-        <% } else { %>
-            <!-- Matches Section -->
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Upcoming Matches</h2>
+        <% } %>
+
+        <!-- Matches Section - Show to everyone -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                <% if (user) { %>
+                    Upcoming Matches
+                <% } else { %>
+                    Current Matches - Login to Predict!
+                <% } %>
+            </h2>
 
                 <% if (matches.length === 0) { %>
                     <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -184,7 +191,22 @@
 
                                     const isLive = now.getTime() >= adjustedMatchTime;
                                 %>
-                                <% if (match.is_locked) { %>
+                                <% if (!user) { %>
+                                    <!-- Non-logged users: Show login prompt -->
+                                    <div class="text-center mb-4">
+                                        <div class="flex space-x-2 mb-3">
+                                            <div class="flex-1 py-2 px-3 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-center">
+                                                <%- match.team_a %>
+                                            </div>
+                                            <div class="flex-1 py-2 px-3 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-center">
+                                                <%- match.team_b %>
+                                            </div>
+                                        </div>
+                                        <a href="/auth/discord" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                            🔐 Login to Predict
+                                        </a>
+                                    </div>
+                                <% } else if (match.is_locked) { %>
                                     <div class="text-center">
                                         <% if (match.status === 'finished') { %>
                                             <p class="text-green-600 font-medium mb-2">🏁 Match Finished</p>
@@ -227,39 +249,70 @@
                                 <% } %>
 
                                 <!-- Voting Stats -->
-                                <div x-show="totalPredictions > 0" class="space-y-2">
-                                    <div class="flex justify-between text-xs text-gray-600">
-                                        <span><%= match.team_a %></span>
-                                        <span x-text="percentTeamA + '%'"></span>
-                                    </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                                             :style="'width: ' + percentTeamA + '%'"></div>
+                                <% if (user) { %>
+                                    <!-- Dynamic stats for logged users -->
+                                    <div x-show="totalPredictions > 0" class="space-y-2">
+                                        <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                                            <span><%= match.team_a %></span>
+                                            <span x-text="percentTeamA + '%'"></span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                            <div class="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                                                 :style="'width: ' + percentTeamA + '%'"></div>
+                                        </div>
+
+                                        <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                                            <span><%= match.team_b %></span>
+                                            <span x-text="percentTeamB + '%'"></span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                            <div class="bg-red-500 h-2 rounded-full transition-all duration-500"
+                                                 :style="'width: ' + percentTeamB + '%'"></div>
+                                        </div>
+
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+                                            Celkem tipů: <span x-text="totalPredictions"></span>
+                                        </p>
                                     </div>
 
-                                    <div class="flex justify-between text-xs text-gray-600">
-                                        <span><%= match.team_b %></span>
-                                        <span x-text="percentTeamB + '%'"></span>
+                                    <div x-show="totalPredictions === 0" class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                        Zatím žádné tipy
                                     </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div class="bg-red-500 h-2 rounded-full transition-all duration-500"
-                                             :style="'width: ' + percentTeamB + '%'"></div>
-                                    </div>
+                                <% } else { %>
+                                    <!-- Static stats for non-logged users -->
+                                    <% if (match.total_predictions > 0) { %>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                                                <span><%= match.team_a %></span>
+                                                <span><%= match.percent_team_a %>%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                                <div class="bg-blue-500 h-2 rounded-full" style="width: <%= match.percent_team_a %>%"></div>
+                                            </div>
 
-                                    <p class="text-xs text-gray-500 text-center mt-2">
-                                        Celkem tipů: <span x-text="totalPredictions"></span>
-                                    </p>
-                                </div>
+                                            <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                                                <span><%= match.team_b %></span>
+                                                <span><%= match.percent_team_b %>%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                                <div class="bg-red-500 h-2 rounded-full" style="width: <%= match.percent_team_b %>%"></div>
+                                            </div>
 
-                                <div x-show="totalPredictions === 0" class="text-xs text-gray-500 text-center">
-                                    Zatím žádné tipy
-                                </div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+                                                Celkem tipů: <%= match.total_predictions %>
+                                            </p>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                            Zatím žádné tipy
+                                        </div>
+                                    <% } %>
+                                <% } %>
                             </div>
                         <% }); %>
                     </div>
                 <% } %>
             </div>
-        <% } %>
     </main>
 
     <!-- Footer -->
