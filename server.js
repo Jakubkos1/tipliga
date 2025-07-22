@@ -49,11 +49,11 @@ const limiter = rateLimit({
 // Enable rate limiting for security
 app.use(limiter);
 
-// Security headers
+// Security headers (bez X-XSS-Protection která blokuje Alpine.js)
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
+    // Odstraněno X-XSS-Protection - blokuje Alpine.js
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     if (process.env.NODE_ENV === 'production') {
         res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
@@ -906,9 +906,9 @@ app.post('/admin/matches', isAuthenticated, (req, res, next) => {
             return res.redirect('/admin?error=Missing required fields');
         }
 
-        // Sanitize team names to prevent XSS
-        teamA = sanitizeInput(teamA.trim());
-        teamB = sanitizeInput(teamB.trim());
+        // Trim team names (sanitizace odstraněna - způsobovala problémy s Alpine.js)
+        teamA = teamA.trim();
+        teamB = teamB.trim();
 
         // Validate team names length and content
         if (teamA.length > 50 || teamB.length > 50) {
