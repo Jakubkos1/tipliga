@@ -24,31 +24,34 @@
           }
       }">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-6">
-                    <a href="/tipliga" class="text-2xl font-bold text-white dark:text-white">🏆 TipLiga</a>
+                <!-- Logo a Beta badge -->
+                <div class="flex items-center space-x-3">
+                    <a href="/tipliga" class="text-xl sm:text-2xl font-bold text-white dark:text-white">🏆 TipLiga</a>
                     <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Beta</span>
-
-                    <!-- Navigation -->
-                    <nav class="flex items-center space-x-2">
-                        <% if (user) { %>
-                            <a href="/tipliga/leaderboard" class="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
-                                🏆 Leaderboard
-                            </a>
-                            <a href="/tipliga/my-predictions" class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
-                                📊 Moje tipy
-                            </a>
-                        <% } %>
-                    </nav>
                 </div>
 
-                <div class="flex items-center space-x-4">
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-2">
+                    <% if (user) { %>
+                        <a href="/tipliga/leaderboard" class="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
+                            🏆 Leaderboard
+                        </a>
+                        <a href="/tipliga/my-predictions" class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">
+                            📊 Moje tipy
+                        </a>
+                    <% } %>
+                </nav>
+
+                <!-- Desktop Right Side -->
+
+                <div class="flex items-center space-x-2 sm:space-x-4">
                     <!-- Dark Mode Toggle -->
                     <button @click="toggleDarkMode()"
                             class="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                            title="Toggle dark/light mode for entire app">
+                            title="Přepnout tmavý/světlý režim">
                         <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                         </svg>
@@ -56,43 +59,110 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
                     </button>
-                    <% if (user) { %>
-                        <div class="flex items-center space-x-3">
+
+                    <!-- Mobile Hamburger Button -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen"
+                            class="md:hidden p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                        <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg x-show="mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    <!-- Desktop User Section -->
+                    <div class="hidden md:flex items-center space-x-3">
+                        <% if (user) { %>
                             <% if (user.avatar_url) { %>
                                 <img src="<%= user.avatar_url %>" alt="Avatar" class="w-8 h-8 rounded-full">
                             <% } %>
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= user.username %></span>
                             <% if (isAdmin || (user && user.role === 'moderator')) { %>
                                 <a href="/admin" class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors">
-                                    Admin Panel
+                                    Admin
                                 </a>
                             <% } %>
                             <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors">Odhlásit</a>
-                        </div>
-                    <% } else { %>
-                        <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                            Přihlásit přes Discord
-                        </a>
-                    <% } %>
+                        <% } else { %>
+                            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                Přihlásit
+                            </a>
+                        <% } %>
+                    </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div x-show="mobileMenuOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform -translate-y-2"
+             class="md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <div class="px-4 py-3 space-y-3">
+                <% if (user) { %>
+                    <!-- User Info -->
+                    <div class="flex items-center space-x-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                        <% if (user.avatar_url) { %>
+                            <img src="<%= user.avatar_url %>" alt="Avatar" class="w-10 h-10 rounded-full">
+                        <% } %>
+                        <div>
+                            <p class="font-medium text-gray-900 dark:text-white"><%= user.username %></p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Přihlášen</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Links -->
+                    <div class="space-y-2">
+                        <a href="/tipliga/leaderboard" class="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <span>🏆</span>
+                            <span>Leaderboard</span>
+                        </a>
+                        <a href="/tipliga/my-predictions" class="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <span>📊</span>
+                            <span>Moje tipy</span>
+                        </a>
+                        <% if (isAdmin || (user && user.role === 'moderator')) { %>
+                            <a href="/admin" class="flex items-center space-x-3 px-3 py-2 rounded-md text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
+                                <span>⚙️</span>
+                                <span>Admin Panel</span>
+                            </a>
+                        <% } %>
+                        <a href="/logout" class="flex items-center space-x-3 px-3 py-2 rounded-md text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                            <span>🚪</span>
+                            <span>Odhlásit se</span>
+                        </a>
+                    </div>
+                <% } else { %>
+                    <!-- Login Button -->
+                    <div class="pt-2">
+                        <a href="/auth/discord" class="flex items-center justify-center space-x-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-md font-medium transition-colors">
+                            <span>🎮</span>
+                            <span>Přihlásit přes Discord</span>
+                        </a>
+                    </div>
+                <% } %>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <% if (!user) { %>
             <!-- Welcome Section -->
-            <div class="text-center py-12 mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Vítejte v TipLiga Beta!</h2>
-                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Tipujte výsledky zápasů a soutěžte s přáteli</p>
+            <div class="text-center py-8 sm:py-12 mb-6 sm:mb-8">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">Vítejte v TipLiga Beta!</h2>
+                <p class="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 px-4">Tipujte výsledky zápasů a soutěžte s přáteli</p>
 
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-medium transition-colors">
-                        Začít tipovat
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
+                    <a href="/auth/discord" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-6 sm:px-8 py-3 rounded-lg text-base sm:text-lg font-medium transition-colors text-center">
+                        🎮 Začít tipovat
                     </a>
-                    <a href="/tipliga/leaderboard" class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-8 py-3 rounded-lg text-lg font-medium transition-colors">
-                        🏆 View Leaderboard
+                    <a href="/tipliga/leaderboard" class="w-full sm:w-auto bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-6 sm:px-8 py-3 rounded-lg text-base sm:text-lg font-medium transition-colors text-center">
+                        🏆 Zobrazit žebříček
                     </a>
                 </div>
             </div>
@@ -109,13 +179,13 @@
             </h2>
 
                 <% if (matches.length === 0) { %>
-                    <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <p class="text-gray-500 dark:text-gray-400">No matches available at the moment.</p>
+                    <div class="text-center py-8 sm:py-12 bg-white dark:bg-gray-800 rounded-lg shadow mx-4 sm:mx-0">
+                        <p class="text-gray-500 dark:text-gray-400">Momentálně nejsou k dispozici žádné zápasy.</p>
                     </div>
                 <% } else { %>
-                    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <div class="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                         <% matches.forEach(match => { %>
-                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6"
                                  <% if (user) { %>
                                  x-data="{
                                      loading: false,
