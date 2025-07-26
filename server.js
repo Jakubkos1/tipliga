@@ -515,7 +515,7 @@ app.get('/obs/overlay/:matchId?', async (req, res) => {
         if (matchId) {
             match = await Match.findById(matchId);
         } else {
-            const matches = await Match.getAllMatches();
+            const matches = await Match.getAll();
             match = matches.find(m => m.status === 'upcoming') || matches[0];
         }
 
