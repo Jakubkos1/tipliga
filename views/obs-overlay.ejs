@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TipLiga OBS Overlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        body {
+            background: transparent !important;
+            margin: 0;
+            padding: 0;
+        }
+        .overlay-container {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .team-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <% if (error) { %>
+        <div class="overlay-container rounded-lg p-6 m-4 max-w-md">
+            <div class="text-center">
+                <div class="text-red-400 text-lg font-bold mb-2">⚠️ Chyba</div>
+                <div class="text-white text-sm"><%= error %></div>
+            </div>
+        </div>
+    <% } else if (!match) { %>
+        <div class="overlay-container rounded-lg p-6 m-4 max-w-md">
+            <div class="text-center">
+                <div class="text-yellow-400 text-lg font-bold mb-2">📭 Žádný zápas</div>
+                <div class="text-white text-sm">Momentálně není k dispozici žádný zápas pro overlay</div>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="overlay-container rounded-lg p-6 m-4 max-w-lg glow" 
+             x-data="{
+                 matchId: '<%= match.id %>',
+                 teamA: '<%= match.team_a %>',
+                 teamB: '<%= match.team_b %>',
+                 totalPredictions: <%= match.total_predictions || 0 %>,
+                 votesTeamA: <%= match.votes_team_a || 0 %>,
+                 votesTeamB: <%= match.votes_team_b || 0 %>,
+                 percentTeamA: <%= match.percent_team_a || 0 %>,
+                 percentTeamB: <%= match.percent_team_b || 0 %>,
+                 
+                 async updateStats() {
+                     try {
+                         const response = await fetch('/api/match/' + this.matchId + '/stats');
+                         const data = await response.json();
+                         
+                         if (data.success) {
+                             this.totalPredictions = data.total_predictions;
+                             this.votesTeamA = data.votes_team_a;
+                             this.votesTeamB = data.votes_team_b;
+                             this.percentTeamA = data.percent_team_a;
+                             this.percentTeamB = data.percent_team_b;
+                         }
+                     } catch (error) {
+                         console.log('Chyba při aktualizaci statistik:', error);
+                     }
+                 },
+                 
+                 init() {
+                     // Aktualizuj statistiky každých 5 sekund
+                     setInterval(() => {
+                         this.updateStats();
+                     }, 5000);
+                     
+                     // První aktualizace hned
+                     this.updateStats();
+                 }
+             }">
+            
+            <!-- Hlavička -->
+            <div class="text-center mb-6">
+                <div class="text-blue-400 text-sm font-medium mb-1">🏆 TIPLIGA LIVE</div>
+                <div class="text-white text-lg font-bold">
+                    <span x-text="teamA"></span> 
+                    <span class="text-gray-400 mx-2">vs</span> 
+                    <span x-text="teamB"></span>
+                </div>
+                <div class="text-gray-300 text-xs mt-1">
+                    Celkem tipů: <span x-text="totalPredictions" class="font-medium"></span>
+                </div>
+            </div>
+
+            <!-- Statistiky týmů -->
+            <div class="space-y-4">
+                <!-- Tým A -->
+                <div class="relative">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-white font-medium text-sm" x-text="teamA"></span>
+                        <span class="text-blue-400 font-bold text-sm">
+                            <span x-text="percentTeamA"></span>%
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                        <div class="team-bar bg-gradient-to-r from-blue-500 to-blue-400 h-full rounded-full"
+                             :style="'width: ' + percentTeamA + '%'"></div>
+                    </div>
+                    <div class="text-right text-xs text-gray-400 mt-1">
+                        <span x-text="votesTeamA"></span> hlasů
+                    </div>
+                </div>
+
+                <!-- Tým B -->
+                <div class="relative">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-white font-medium text-sm" x-text="teamB"></span>
+                        <span class="text-red-400 font-bold text-sm">
+                            <span x-text="percentTeamB"></span>%
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                        <div class="team-bar bg-gradient-to-r from-red-500 to-red-400 h-full rounded-full"
+                             :style="'width: ' + percentTeamB + '%'"></div>
+                    </div>
+                    <div class="text-right text-xs text-gray-400 mt-1">
+                        <span x-text="votesTeamB"></span> hlasů
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status indikátor -->
+            <div class="text-center mt-4 pt-3 border-t border-gray-600">
+                <div class="flex items-center justify-center space-x-2">
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span class="text-green-400 text-xs font-medium">LIVE UPDATING</span>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <!-- Debug info (skryté v produkci) -->
+    <% if (process.env.NODE_ENV !== 'production') { %>
+        <div class="fixed bottom-2 right-2 text-xs text-gray-400 bg-black bg-opacity-50 p-2 rounded">
+            URL: /obs/overlay/<%= match ? match.id : 'auto' %>
+        </div>
+    <% } %>
+</body>
+</html>

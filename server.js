@@ -505,6 +505,40 @@ app.get('/api/match/:id/stats', async (req, res) => {
     }
 });
 
+// OBS Overlay route - zobrazí live statistiky pro streaming
+app.get('/obs/overlay/:matchId?', async (req, res) => {
+    try {
+        const { matchId } = req.params;
+
+        // Pokud není zadáno matchId, najdi nejnovější upcoming zápas
+        let match;
+        if (matchId) {
+            match = await Match.findById(matchId);
+        } else {
+            const matches = await Match.getAllMatches();
+            match = matches.find(m => m.status === 'upcoming') || matches[0];
+        }
+
+        if (!match) {
+            return res.render('obs-overlay', {
+                match: null,
+                error: 'Žádný zápas nenalezen'
+            });
+        }
+
+        res.render('obs-overlay', {
+            match: match,
+            error: null
+        });
+    } catch (error) {
+        console.error('Error loading OBS overlay:', error);
+        res.render('obs-overlay', {
+            match: null,
+            error: 'Chyba při načítání overlay'
+        });
+    }
+});
+
 // Public leaderboard route
 app.get('/tipliga/leaderboard', async (req, res) => {
     try {
