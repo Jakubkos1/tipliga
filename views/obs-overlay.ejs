@@ -143,7 +143,7 @@
     <!-- Debug info (skryté v produkci) -->
     <% if (process.env.NODE_ENV !== 'production') { %>
         <div class="fixed bottom-2 right-2 text-xs text-gray-400 bg-black bg-opacity-50 p-2 rounded">
-            URL: /obs/overlay/<%= match ? match.id : 'auto' %>
+            URL: /obs/overlay<%= match ? '/' + match.id : '' %>
         </div>
     <% } %>
 </body>

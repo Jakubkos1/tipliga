@@ -536,6 +536,14 @@ app.get('/obs/overlay/:matchId', async (req, res) => {
     try {
         const { matchId } = req.params;
 
+        // Validace že matchId je číslo
+        if (!/^\d+$/.test(matchId)) {
+            return res.render('obs-overlay', {
+                match: null,
+                error: `Neplatné ID zápasu: ${matchId}`
+            });
+        }
+
         // Najdi konkrétní zápas podle ID
         const match = await Match.findById(matchId);
 
